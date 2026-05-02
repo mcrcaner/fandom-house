@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fandom House | Archive Terminal</title>
+    
+    <link rel="stylesheet" href="https://use.typekit.net/epe0nqq.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --os-bg: #050a11;
+            --os-panel: #0a1420;
+            --os-ink: #92c06c;
+            --os-primary: #89d0cc;
+            --os-accent: #92c06c;
+            --os-danger: #d94b2e;
+            --os-border: #89d0cc;
+            --os-glow: 0 0 12px rgba(146, 192, 108, 0.6), 0 0 3px rgba(146, 192, 108, 0.8);
+            --os-glow-danger: 0 0 12px rgba(217, 75, 46, 0.7), 0 0 3px rgba(217, 75, 46, 1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'forma-djr-mono', monospace;
+            margin: 0; padding: 20px;
+            color: var(--os-ink); background-color: var(--os-bg);
+            background-image: 
+                linear-gradient(rgba(137, 208, 204, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(137, 208, 204, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; 
+            cursor: default; overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+            text-shadow: var(--os-glow);
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(5, 10, 17, 0.25) 50%);
+            background-size: 100% 3px;
+            z-index: 9999; pointer-events: none;
+        }
+
+        .crt-effects {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, rgba(0,0,0,0) 60%, rgba(5, 10, 17, 0.6) 100%);
+            z-index: 9998; pointer-events: none;
+        }
+
+        @keyframes crtFlicker {
+            0% { opacity: 1; }
+            3% { opacity: 0.8; }
+            6% { opacity: 1; }
+            7% { opacity: 0.9; }
+            8% { opacity: 1; }
+            9% { opacity: 1; }
+            10% { opacity: 0.7; }
+            11% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        .flicker { animation: crtFlicker 6s infinite alternate; }
+        .flicker-fast { animation: crtFlicker 3s infinite alternate-reverse; }
+
+        @keyframes blinkCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink {
+            display: inline-block; width: 12px; height: 1.2em;
+            background-color: var(--os-ink); vertical-align: bottom;
+            animation: blinkCursor 1s infinite;
+        }
+
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--os-bg); z-index: 9000;
+            padding: 40px; display: flex; flex-direction: column;
+            font-family: 'forma-djr-mono', monospace; text-transform: uppercase;
+            color: var(--os-primary); text-shadow: 0 0 8px rgba(137, 208, 204, 0.4);
+            transition: opacity 0.5s ease-out;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+        }
+        .boot-line { margin: 5px 0; }
+        .boot-highlight { color: var(--os-ink); text-shadow: var(--os-glow); }
+        .boot-danger { color: var(--os-danger); text-shadow: var(--os-glow-danger); }
+
+        .terminal-panel {
+            background: var(--os-panel);
+            --current-border: var(--os-primary);
+            border: none;
+            border-top: 2px solid var(--current-border);
+            border-bottom: 2px solid var(--current-border);
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(137, 208, 204, 0.1), 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .terminal-panel::before, .terminal-panel::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 12px;
+            border-left: 2px solid var(--current-border);
+            border-right: 2px solid var(--current-border);
+            pointer-events: none;
+        }
+        .terminal-panel::before { top: 0; }
+        .terminal-panel::after { bottom: 0; }
+
+        .os-taskbar {
+            width: 100%; max-width: 1200px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px; margin-bottom: 20px;
+            font-size: 0.9em; font-weight: 700; z-index: 100;
+        }
+
+        .os-brand { display: flex; align-items: center; height: 45px; }
+        .fh-logo-img {
+            height: 100%; max-height: 45px; object-fit: contain;
+        }
+        .os-stats { display: flex; gap: 20px; color: var(--os-primary); }
+
+        .window-container {
+            width: 100%; max-width: 1200px;
+            display: flex; flex-direction: column;
+            margin-bottom: 40px; position: relative; z-index: 10;
+        }
+
+        .window-titlebar {
+            background: var(--os-primary); color: var(--os-bg);
+            border: 2px solid var(--os-primary); 
+            padding: 8px 20px; display: flex; justify-content: space-between;
+            align-items: center; font-weight: 700; letter-spacing: 2px;
+            text-shadow: none;
+        }
+
+        .window-controls { display: flex; gap: 8px; font-weight: 700; }
+        
+        .window-content { 
+            padding: 0; display: flex; flex-direction: column; 
+            border: none;
+            border-bottom: 2px solid var(--os-primary);
+            border-left: 2px solid var(--os-primary);
+            border-right: 2px solid var(--os-primary);
+            background: var(--os-bg);
+        }
+
+        .internal-nav {
+            position: sticky; top: 10px; z-index: 1000;
+            margin: 20px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a {
+            color: var(--os-primary); text-decoration: none; cursor: pointer;
+            padding: 8px 16px; font-weight: 700; font-size: 1em;
+            transition: all 0.2s; border: 1px solid transparent;
+        }
+        .nav-links a:hover, .nav-links a.active { 
+            background: rgba(137, 208, 204, 0.15); color: var(--os-ink); 
+            border-color: var(--os-ink);
+        }
+
+        #nav-cart {
+            border: 2px dashed var(--os-primary); background: transparent;
+            position: relative; padding: 10px 25px;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s; color: var(--os-primary);
+        }
+        #nav-cart.active-zone {
+            background: rgba(146, 192, 108, 0.2); border-color: var(--os-ink); color: var(--os-ink);
+            border-style: solid; transform: scale(1.05); box-shadow: var(--os-glow);
+        }
+        #nav-cart.flash { background: var(--os-ink); color: var(--os-bg); transform: scale(0.95); text-shadow: none; }
+
+        .cart-badge { background: var(--os-primary); color: var(--os-bg); padding: 2px 8px; font-size: 0.9em; font-weight: 700; text-shadow: none; }
+        #nav-cart.active-zone .cart-badge { background: var(--os-ink); }
+        #nav-cart .cart-badge.danger { background: var(--os-danger); color: #fff;}
+
+        .hardware-wrapper { padding: 0 20px; margin-bottom: 20px; }
+        .hardware-panel {
+            padding: 15px 25px; display: flex; justify-content: space-between;
+            align-items: center; font-size: 0.9em; font-weight: 700;
+            background: rgba(137, 208, 204, 0.05);
+        }
+        .hardware-controls { display: flex; align-items: center; gap: 15px; }
+
+        input[type=range] {
+            accent-color: var(--os-ink); cursor: pointer; width: 120px; height: 4px;
+            background: rgba(137, 208, 204, 0.3); appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none; width: 14px; height: 24px; background: var(--os-ink); 
+            cursor: pointer; border: 1px solid var(--os-bg);
+        }
+
+        button {
+            font-family: 'forma-djr-mono', monospace; font-weight: 700; cursor: pointer;
+            font-size: 0.9rem; padding: 8px 16px; color: var(--os-bg);
+            background-color: var(--os-primary); border: 2px solid var(--os-primary);
+            text-transform: uppercase; transition: all 0.1s; text-shadow: none;
+        }
+        button:hover, button.hovered {
+            background-color: var(--os-ink); border-color: var(--os-ink);
+            transform: translate(-2px, -2px); box-shadow: 4px 4px 0px rgba(137, 208, 204, 0.4);
+        }
+        button.danger { background-color: transparent; color: var(--os-danger); border-color: var(--os-danger); text-shadow: var(--os-glow-danger); }
+        button.danger:hover { background-color: var(--os-danger); color: var(--os-bg); text-shadow: none; box-shadow: 4px 4px 0px rgba(217, 75, 46, 0.4); }
+
+        .filter-bar {
+            display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;
+            border-bottom: 1px dashed var(--os-primary); padding-bottom: 20px;
+        }
+        button.filter-btn {
+            background-color: transparent; border-color: rgba(137, 208, 204, 0.4); color: var(--os-primary); text-shadow: none;
+        }
+        button.filter-btn:hover, button.filter-btn.active-filter {
+            background-color: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);
+        }
+
+        h1, h2, h3 { font-family: 'forma-djr-mono', monospace; margin-top: 0; font-weight: 700; text-transform: uppercase; }
+        h1 { color: var(--os-ink); }
+        h2, h3 { color: var(--os-primary); }
+        p { font-family: 'forma-djr-text', sans-serif; line-height: 1.6; text-transform: none; }
+        
+        .os-brand, .nav-links a, .hero-badge, .universe-tag, .price, .cart-badge, .terminal-input, #nav-cart, .window-titlebar, label, .hardware-panel {
+            text-transform: uppercase;
+        }
+
+        .page { display: none; padding: 20px 40px 60px 40px; }
+        .page.active { display: block; animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-header {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 40px;
+            font-size: 1.5em; color: var(--os-ink); letter-spacing: 2px;
+        }
+        .section-header::after { content: ''; flex-grow: 1; height: 1px; background: var(--os-primary); opacity: 0.5; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .hero-section {
+            background: rgba(137, 208, 204, 0.05);
+            padding: 80px 40px; text-align: center; margin-bottom: 60px; position: relative;
+        }
+        .hero-badge {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            background: var(--os-primary); padding: 4px 20px; font-weight: 700;
+            color: var(--os-bg); text-shadow: none; letter-spacing: 2px;
+        }
+        .hero-title { font-size: 3.5em; margin-bottom: 20px; letter-spacing: 2px; }
+        .hero-subtitle { font-size: 1.2em; max-width: 600px; margin: 0 auto 40px auto; color: var(--os-primary); }
+        .hero-actions { display: flex; justify-content: center; gap: 20px; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+
+        .product-card {
+            background: var(--os-panel); 
+            --current-border: var(--os-primary);
+            border: none;
+            border-top: 2px solid var(--current-border);
+            border-bottom: 2px solid var(--current-border);
+            padding: 25px;
+            position: relative; cursor: pointer;
+            transition: all 0.2s; transform-style: preserve-3d;
+        }
+        
+        .product-card::before, .product-card::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 12px;
+            border-left: 2px solid var(--current-border);
+            border-right: 2px solid var(--current-border);
+            pointer-events: none;
+            transition: border-color 0.2s;
+        }
+        .product-card::before { top: 0; }
+        .product-card::after { bottom: 0; }
+
+        .product-card:hover, .product-card.hovered {
+            --current-border: var(--os-ink);
+            background: rgba(146, 192, 108, 0.05);
+            box-shadow: var(--os-glow);
+            transform: translateY(-5px);
+        }
+
+        .image-viewer {
+            width: 100%; height: 200px; border: 1px dashed var(--os-primary); background: var(--os-bg); 
+            margin-bottom: 25px; display: flex; justify-content: center; align-items: center; 
+            font-size: 0.8em; color: var(--os-primary); font-weight: 700;
+            transition: all 0.3s ease;
+            padding: 15px;
+            overflow: hidden;
+        }
+        .image-viewer img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+        }
+        .product-card:hover .image-viewer { border-color: var(--os-ink); color: var(--os-ink); }
+
+        .universe-tag {
+            font-size: 0.8em; border: 1px solid var(--os-primary); color: var(--os-primary);
+            padding: 4px 8px; font-weight: 700; display: inline-block; margin-bottom: 15px;
+        }
+
+        .product-card h3 { font-size: 1.4em; margin-bottom: 10px; line-height: 1.3; color: var(--os-ink); }
+        .product-card .price {
+            display: inline-block; margin-top: 15px; font-size: 1.2em; font-weight: 700; color: var(--os-bg);
+            background: var(--os-primary); padding: 6px 12px; text-shadow: none;
+        }
+
+        .ghost-card {
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10001; 
+            background: var(--os-panel); border: 2px solid var(--os-ink);
+            padding: 20px; width: 280px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            opacity: 0.9;
+            will-change: transform; 
+        }
+        .ghost-card h3 { font-size: 1.1em; margin: 0; color: var(--os-ink); }
+
+        #hand-cursor {
+            position: fixed; top: 0; left: 0; width: 24px; height: 24px;
+            border: 2px solid var(--os-primary); background: rgba(137, 208, 204, 0.2); 
+            pointer-events: none; z-index: 10000; display: none;
+            transition: width 0.1s, height 0.1s, background 0.1s, border-color 0.1s;
+            will-change: transform;
+        }
+
+        #hand-cursor::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; 
+            background: var(--os-primary); transform: translate(-50%, -50%);
+        }
+
+        #hand-cursor.pinched { background-color: rgba(146, 192, 108, 0.4); border-color: var(--os-ink); } 
+        #hand-cursor.clicking { background-color: var(--os-danger); border-color: var(--os-danger); } 
+        #hand-cursor.dragging { background-color: rgba(146, 192, 108, 0.2); width: 34px; height: 34px; border-color: var(--os-ink); border-width: 3px; }
+
+        #status { background: transparent; border: 1px solid var(--os-primary); color: var(--os-primary); padding: 4px 12px; }
+        .input_video { display: none; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 10, 17, 0.9);
+            z-index: 5000; display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-content {
+            width: 95%; max-width: 1200px; padding: 0;
+            transform: scale(0.98); transition: all 0.2s;
+            max-height: 90vh;
+            display: flex; flex-direction: column;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-inner {
+            padding: 40px; flex: 1; min-height: 0;
+            overflow-y: auto;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .modal-inner::-webkit-scrollbar { display: none; }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        
+        .close-btn { background: transparent; border: none; color: var(--os-primary); font-size: 2em; cursor: pointer; padding: 0; line-height: 1; box-shadow: none; margin-top: -2px; }
+        .close-btn:hover, .close-btn.hovered { background: transparent; color: var(--os-danger); transform: scale(1.1); text-shadow: var(--os-glow-danger); box-shadow: none; }
+        
+        .modal-layout { display: flex; flex-direction: column; gap: 40px; min-height: 0; }
+        
+        @media (min-width: 768px) {
+            .modal-layout { flex-direction: row; }
+            .modal-left { flex: 1.4; min-width: 0; display: flex; flex-direction: column; }
+            .modal-right { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        }
+
+        .modal-image { 
+            position: relative;
+            width: 100%; height: auto; max-height: 60vh; border: 1px solid var(--os-primary); background: var(--os-bg); 
+            display: flex; justify-content: center; align-items: center; margin-bottom: 20px;
+            padding: 20px; overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .modal-image img {
+            width: 100%; height: 100%; max-height: 550px; object-fit: contain;
+        }
+        .modal-image.zoomable { cursor: pointer; }
+        .modal-image.zoomable:hover, .modal-image.zoomable.hovered { border-color: var(--os-ink); }
+
+        .zoom-signifier {
+            position: absolute; bottom: 10px; right: 10px;
+            background: var(--os-bg); color: var(--os-primary); border: 1px solid var(--os-primary);
+            padding: 4px 8px; font-size: 0.8em; font-weight: 700; font-family: 'forma-djr-mono', monospace;
+            pointer-events: none; transition: all 0.2s; text-transform: uppercase;
+        }
+        .modal-image.zoomable:hover .zoom-signifier, .modal-image.zoomable.hovered .zoom-signifier {
+            color: var(--os-bg); background: var(--os-ink); border-color: var(--os-ink); text-shadow: none;
+        }
+
+        .gallery-nav { display: none; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: auto; padding-bottom: 10px; }
+        .gallery-thumb { width: 65px; height: 65px; border: 1px dashed var(--os-primary); cursor: pointer; padding: 5px; opacity: 0.5; transition: all 0.2s; background: var(--os-bg); }
+        .gallery-thumb img { width: 100%; height: 100%; object-fit: contain; }
+        .gallery-thumb:hover, .gallery-thumb.hovered, .gallery-thumb.active-thumb { opacity: 1; border: 1px solid var(--os-ink); box-shadow: var(--os-glow); }
+
+        #lightbox-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 10, 17, 0.95);
+            z-index: 6000; display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.2s ease; cursor: zoom-out;
+        }
+        #lightbox-overlay.active { display: flex; opacity: 1; }
+        
+        #lightbox-image {
+            max-width: 90%; max-height: 90%;
+            border: 2px solid var(--os-ink);
+            box-shadow: var(--os-glow);
+            object-fit: contain;
+            transition: opacity 0.2s;
+        }
+        
+        .lightbox-close {
+            position: absolute; top: 30px; right: 40px;
+            color: var(--os-primary); font-size: 2.5em; font-weight: 700; cursor: pointer; line-height: 1;
+        }
+        .lightbox-close:hover, .lightbox-close.hovered { color: var(--os-danger); text-shadow: var(--os-glow-danger); transform: scale(1.1); }
+
+        .lightbox-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            color: var(--os-primary); font-size: 3em; font-weight: 700;
+            cursor: pointer; user-select: none; transition: all 0.2s;
+            z-index: 6001; background: transparent; padding: 20px;
+        }
+        .lightbox-nav:hover, .lightbox-nav.hovered {
+            color: var(--os-ink); text-shadow: var(--os-glow);
+        }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid var(--os-primary); margin-bottom: 15px; background: var(--os-panel); }
+        .cart-item h3 { margin: 0 0 5px 0; font-size: 1.2em; color: var(--os-ink); }
+        .cart-summary { margin-top: 30px; padding: 30px; background: rgba(137, 208, 204, 0.05); border: 1px dashed var(--os-primary); text-align: right; }
+
+        .terminal-input {
+            background: rgba(137, 208, 204, 0.05);
+            border: 1px solid var(--os-primary);
+            color: var(--os-ink);
+            padding: 12px; outline: none; transition: all 0.2s;
+            text-transform: uppercase; width: 100%;
+        }
+        .terminal-input:focus { border-color: var(--os-ink); box-shadow: var(--os-glow); }
+        .terminal-input::placeholder { color: rgba(137, 208, 204, 0.4); }
+
+        footer { text-align: center; padding: 30px 20px; font-size: 0.85em; font-weight: 600; color: var(--os-primary); border-top: 1px dashed var(--os-primary); margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="crt-effects"></div>
+
+    <div id="boot-screen">
+        <div id="boot-text-container"></div>
+        <div style="margin-top: 5px;"><span class="cursor-blink"></span></div>
+    </div>
+
+    <div class="os-taskbar terminal-panel flicker-fast">
+        <div class="os-brand">
+            <img src="logo4.png" alt="Fandom House" class="fh-logo-img">
+        </div>
+        <div class="os-stats">
+            <span id="os-clock">00:00:00 LCT</span>
+        </div>
+    </div>
+
+    <div class="window-container">
+        
+        <div class="window-titlebar flicker">
+            <span>ARTIFACT_COLLECTION_TERMINAL.EXE</span>
+            <div class="window-controls">
+                <span>[ SYS.OK ]</span>
+            </div>
+        </div>
+
+        <div class="window-content">
+            
+            <div class="internal-nav terminal-panel">
+                <div class="nav-links">
+                    <a onclick="switchPage('home', this)" class="active">[ OVERVIEW ]</a>
+                    <a onclick="switchPage('catalog', this)">[ PRODUCTS ]</a>
+                    <a onclick="switchPage('guide', this)">[ SYS_MANUAL ]</a>
+                </div>
+                <div id="nav-cart" onclick="switchPage('cart', null)">
+                    CART <span class="cart-badge" id="nav-cart-count">0</span>
+                </div>
+            </div>
+            
+            <div class="hardware-wrapper">
+                <div class="hardware-panel terminal-panel">
+                    <span id="status">OPTICS: OFFLINE</span>
+                    <div class="hardware-controls">
+                        <label for="sensSlider" style="color: var(--os-primary);">SENSITIVITY:</label>
+                        <input type="range" id="sensSlider" min="0.05" max="0.35" step="0.05" value="0.20">
+                        <button id="toggleCam" onclick="toggleCamera()">INITIALIZE_OPTICS</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="home" class="page active">
+                <div class="hero-section terminal-panel reveal">
+                    <div class="hero-badge">MULTIVERSE ARCHIVE</div>
+                    <h1 class="hero-title flicker">[ARTIFACTS ACROSS REALITIES]</h1>
+                    <p class="hero-subtitle">Curating high-fidelity artifacts, books, and media recovered from alternate timelines and universes.</p>
+                    <div class="hero-actions">
+                        <button onclick="switchPage('catalog', document.querySelectorAll('.nav-links a')[1])" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">BROWSE PRODUCTS</button>
+                    </div>
+                </div>
+                
+                <h2 class="section-header reveal">FEATURED ARTIFACTS</h2>
+                <div class="card-grid">
+                    
+                    <div class="product-card reveal" data-category="audio" data-id="p5" data-title="Defiant Jazz Cassette" data-price="20" data-tag="AUDIO & MUSIC" data-desc="The official Music Dance Experience cassette featuring 'Defiant Jazz'. Authorized for Macrodata Refinement." onclick="openModal(this)">
+                        
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="defiantjazz.png" alt="Cover Art">
+                        </div>
+
+                        <span class="universe-tag">AUDIO & MUSIC</span>
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="defiantjazz.png" alt="Defiant Jazz Cassette">
+                        </div>
+                        <div>
+                            <h3>Defiant Jazz Cassette</h3>
+                            <span class="price">20 USD</span>
+                        </div>
+                    </div>
+
+
+                    <div class="product-card reveal" style="transition-delay: 0.2s;" data-category="literature" data-id="p1" data-title="Optics & Design Art Book" data-price="85" data-tag="LITERATURE & TEXTS" data-desc="The work is mysterious and important. An archival collection of oil paintings created by the Optics and Design department. Please try to enjoy each painting equally." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="optics1.jpg" alt="Cover Art">
+                            <img src="optics2.jpg" alt="Inside Pages">
+                        </div>
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="optics1.jpg" alt="Optics & Design Art Book">
+                        </div>
+                        <div>
+                            <h3>Optics & Design Art Book</h3>
+                            <span class="price">85 USD</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="catalog" class="page">
+                <h2 class="section-header reveal">FULL PRODUCT INDEX</h2>
+                
+                <div class="filter-bar reveal">
+                    <button class="filter-btn active-filter" onclick="filterCatalog('all', this)">[ ALL_ARCHIVES ]</button>
+                    <button class="filter-btn" onclick="filterCatalog('literature', this)">[ LITERATURE & TEXTS ]</button>
+                    <button class="filter-btn" onclick="filterCatalog('audio', this)">[ AUDIO & MUSIC ]</button>
+                    <button class="filter-btn" onclick="filterCatalog('ephemera', this)">[ ARCHIVAL EPHEMERA ]</button>
+                    <button class="filter-btn" onclick="filterCatalog('trinkets', this)">[ TRINKETS & RELICS ]</button>
+                </div>
+
+                <div class="card-grid" id="catalog-grid">
+                    
+                    <div class="product-card reveal" data-category="literature" data-id="p1" data-title="Optics & Design Art Book" data-price="85" data-tag="LITERATURE & TEXTS" data-desc="The work is mysterious and important. An archival collection of oil paintings created by the Optics and Design department. Please try to enjoy each painting equally." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="optics1.jpg" alt="Cover Art">
+                            <img src="optics2.jpg" alt="Inside Pages">
+                        </div>
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="optics1.jpg" alt="Optics & Design Art Book">
+                        </div>
+                        <div>
+                            <h3>Optics & Design Art Book</h3>
+                            <span class="price">85 USD</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card reveal" data-category="literature" data-id="p2" data-title="Time Magazine - Eldon Tyrell - Person of the Year Cover" data-price="25" data-tag="LITERATURE & TEXTS" data-desc="The 2019 Person of the Year issue featuring Eldon Tyrell. A tribute to the architect of the Nexus series and the master of biomechanics." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="timecover1.jpg" alt="Time Magazine Cover">
+                            <img src="placeholder2.png" alt="Inside Ad">
+                        </div>
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="timecover1.jpg" alt="Time Magazine Eldon Tyrell Cover">
+                        </div>
+                        <div>
+                            <h3>Time Magazine - Eldon Tyrell - Person of the Year Issue</h3>
+                            <span class="price">25 USD</span>
+                        </div>
+                    </div>
+
+                    <div class="product-card reveal" data-category="literature" data-id="p3" data-title="The Grasshopper Lies Heavy" data-price="45" data-tag="LITERATURE & TEXTS" data-desc="A premium 12-inch ambient record. Includes a fully detailed inner sleeve and a heavy cardboard slipcase." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="grasshopper1.jpg" alt="The Grasshopper Lies Heavy Cover">
+                            <img src="grasshopper2.jpg" alt="The Grasshopper Lies Heavy Cover 2">
+                        </div>
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                         <div class="image-viewer" style="border-style: solid;">
+                            <img src="grasshopper1.jpg" alt="The Grasshopper Lies Heavy Cover">
+                        </div>
+                        <div>
+                            <h3>The Grasshopper Lies Heavy</h3>
+                            <span class="price">45 USD</span>
+                        </div>
+                    </div>
+
+                    <div class="product-card reveal" data-category="ephemera" data-id="p4" data-title="Portal the Weighted Companion Cube Pop-Up Card" data-price="8" data-tag="ARCHIVAL EPHEMERA" data-desc="A pop-up card of the Weighted Companion Cube for your favorite test subject. The perfect gift for the person who stays by your side through every puzzle." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="placeholder1.png" alt="Placeholder 1">
+                            <img src="placeholder2.png" alt="Placeholder 2">
+                        </div>
+                        <span class="universe-tag">ARCHIVAL EPHEMERA</span>
+                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <div>
+                            <h3>Portal the Weighted Companion Cube Pop-Up Card</h3>
+                            <span class="price">8 USD</span>
+                        </div>
+                    </div>
+
+                   
+
+                    <div class="product-card reveal" data-category="ephemera" data-id="p6" data-title="Silo the Stairwell Pop-Up Card" data-price="8" data-tag="ARCHIVAL EPHEMERA" data-desc="A pop-up card of the Stairwell for when you're far apart. A thoughtful gift for those separated by the long climb between the Up Top and the Down Deep." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="placeholder1.png" alt="Placeholder 1">
+                            <img src="placeholder2.png" alt="Placeholder 2">
+                        </div>
+                        <span class="universe-tag">ARCHIVAL EPHEMERA</span>
+                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <div>
+                            <h3>Silo the Stairwell Pop-Up Card</h3>
+                            <span class="price">8 USD</span>
+                        </div>
+                    </div>
+
+                    <div class="product-card reveal" data-category="ephemera" data-id="p7" data-title="Fallout the Vault Door Pop-Up Card" data-price="8" data-tag="ARCHIVAL EPHEMERA" data-desc="​A pop-up card of a Vault door for when you're finally ready to let someone in. A sweet reminder for the person who unlocked your heart." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="placeholder1.png" alt="Placeholder 1">
+                            <img src="placeholder2.png" alt="Placeholder 2">
+                        </div>
+                        <span class="universe-tag">ARCHIVAL EPHEMERA</span>
+                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <div>
+                            <h3>Fallout the Vault Door Pop-Up Card</h3>
+                            <span class="price">8 USD</span>
+                        </div>
+                    </div>
+
+                    <div class="product-card reveal" data-category="trinkets" data-id="p8" data-title="Trinket 1" data-price="120" data-tag="TRINKETS & RELICS" data-desc="A heavy, machined physical artifact. Represents a core piece of everyday carry hardware from a secured timeline." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="placeholder1.png" alt="Placeholder 1">
+                            <img src="placeholder2.png" alt="Placeholder 2">
+                        </div>
+                        <span class="universe-tag">TRINKETS & RELICS</span>
+                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <div>
+                            <h3>Trinket 1</h3>
+                            <span class="price">120 USD</span>
+                        </div>
+                    </div>
+
+                    <div class="product-card reveal" data-category="trinkets" data-id="p9" data-title="Pin 1" data-price="15" data-tag="TRINKETS & RELICS" data-desc="A durable, hard-enamel lapel pin with a secure rubber backing. Subtle insignia representing faction loyalty." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="placeholder1.png" alt="Placeholder 1">
+                            <img src="placeholder2.png" alt="Placeholder 2">
+                        </div>
+                        <span class="universe-tag">TRINKETS & RELICS</span>
+                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <div>
+                            <h3>Pin 1</h3>
+                            <span class="price">15 USD</span>
+                        </div>
+                    </div>
+
+                     <div class="product-card reveal" data-category="audio" data-id="p5" data-title="Defiant Jazz Cassette" data-price="20" data-tag="AUDIO & MUSIC" data-desc="The official Music Dance Experience cassette featuring 'Defiant Jazz'. Authorized for Macrodata Refinement." onclick="openModal(this)">
+                        <div class="product-gallery-data" style="display: none;">
+                            <img src="defiantjazz.png" alt="Cover Art">
+                        </div>
+                        <span class="universe-tag">AUDIO & MUSIC</span>
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="defiantjazz.png" alt="Defiant Jazz Cassette">
+                        </div>
+                        <div>
+                            <h3>Defiant Jazz Cassette</h3>
+                            <span class="price">20 USD</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="guide" class="page">
+                <h2 class="section-header reveal">OPTICAL PROTOCOL MANUAL</h2>
+                <div class="reveal terminal-panel" style="padding: 40px;">
+                    <p style="font-size: 1.2em; margin-top:0; color: var(--os-danger);">WARNING: UNAUTHORIZED DATA EXTRACTION IS STRICTLY PROHIBITED.</p>
+                    <ul style="line-height: 2.2; font-weight: 600; font-family: 'forma-djr-mono', monospace; color: var(--os-primary);">
+                        <li><strong>[ DYNAMIC SCROLL ]</strong> - Pinch <span style="color:var(--os-ink)">Index + Thumb</span> in empty space and drag vertically. The view follows your velocity.</li>
+                        <li><strong>[ INSPECT DATA ]</strong> - Tap <span style="color:var(--os-ink)">Middle Finger Knuckle + Thumb Tip</span> on a card to view decrypted details.</li>
+                        <li><strong>[ QUEUE FOR CHECKOUT ]</strong> - Bring <span style="color:var(--os-ink)">All Fingertips Together</span> over a Item to physically GRAB it. Drag it to the Cart zone at the top of the screen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="cart" class="page">
+                <h2 class="section-header reveal">SHOPPING CART</h2>
+                <div id="cart-empty-msg" class="reveal terminal-panel" style="padding: 60px; text-align: center;">
+                    <p style="font-size: 1.2em; font-weight: 700; color: var(--os-ink);">CART IS EMPTY.</p>
+                    <p style="color: var(--os-primary); margin-top: 0;">(Drag items to the Cart zone above to queue them)</p>
+                </div>
+                <div id="cart-content-area" style="display: none;">
+                    <div id="cart-items-list"></div>
+                    <div class="cart-summary reveal terminal-panel">
+                        <h2 style="margin:0 0 15px 0;">TOTAL: <span id="cart-total-display" style="color: var(--os-ink);">0</span> USD.</h2>
+                        <button onclick="goToCheckout()" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">PROCESS CHECKOUT</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="checkout" class="page">
+                <h2 class="section-header reveal">SECURE CHECKOUT</h2>
+                <div class="terminal-panel reveal" style="padding: 40px; display: flex; flex-direction: column; gap: 20px;">
+                    <p style="color: var(--os-primary); margin-top: 0;">ENTER DELIVERY DETAILS BELOW:</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="color: var(--os-ink); font-weight: 700;">[ RECIPIENT NAME ]</label>
+                        <input type="text" class="terminal-input" placeholder="Enter Identity...">
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="color: var(--os-ink); font-weight: 700;">[ DESTINATION ADDRESS ]</label>
+                        <input type="text" class="terminal-input" placeholder="Enter Coordinates...">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="color: var(--os-ink); font-weight: 700;">[ EMAIL ADDRESS ]</label>
+                        <input type="email" class="terminal-input" placeholder="Enter Contact...">
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px dashed var(--os-primary); padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.2em; color: var(--os-primary);">TOTAL: <span id="checkout-total" style="color: var(--os-ink); font-weight: 700;">0</span> USD</span>
+                        <button onclick="processOrder()" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">COMPLETE ORDER</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="success" class="page">
+                <h2 class="section-header reveal">TRANSACTION COMPLETE</h2>
+                <div class="terminal-panel reveal" style="padding: 60px; text-align: center;">
+                    <h1 style="color: var(--os-ink); margin-bottom: 20px;">ORDER SUCCESSFUL</h1>
+                    <p style="color: var(--os-primary); margin-bottom: 40px;">Your artifacts have been queued for temporal delivery.</p>
+                    <button onclick="switchPage('home', document.querySelectorAll('.nav-links a')[0])">RETURN TO TERMINAL</button>
+                </div>
+            </div>
+
+        </div> 
+    </div> 
+
+    <footer>
+        <p>FANDOM HOUSE &copy; 2026. SECURED ACROSS ALL TIMELINES. // ARCHIVE_SYS_V3.1</p>
+    </footer>
+
+    <div id="product-modal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
+        <div class="modal-content terminal-panel">
+            <div class="modal-inner">
+                <div class="modal-layout">
+                    <div class="modal-left">
+                        <div id="main-modal-image" class="modal-image">[ HI-RES_PREVIEW.PNG ]</div>
+                        <div id="modal-gallery-nav" class="gallery-nav"></div>
+                    </div>
+                    
+                    <div class="modal-right">
+                        <div class="modal-header">
+                            <h2 class="section-header" id="modal-title" style="margin-bottom: 0; font-size: 1.8em; border:none; padding:0; flex-grow: 1; margin-right: 20px;">PRODUCT DETAILS</h2>
+                            <button class="close-btn" onclick="closeModal()">[X]</button>
+                        </div>
+                        <span id="modal-tag" class="universe-tag" style="align-self: flex-start; margin-bottom: 20px;">UNIVERSE</span>
+                        <p id="modal-desc" style="color: var(--os-primary); margin-top: 0; margin-bottom: 30px; font-size: 1.1em; line-height: 1.6;">Description data...</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--os-primary); padding-top: 20px; margin-top: auto;">
+                            <span id="modal-price" class="price" style="font-size: 1.5em; font-weight: 700; color: var(--os-ink);">0 USD</span>
+                            <button id="modal-add-btn" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">ADD TO CART</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="lightbox-overlay" onclick="if(event.target === this) closeLightbox()">
+        <div class="lightbox-close" onclick="closeLightbox()">[X]</div>
+        
+        <div class="lightbox-nav lightbox-prev" onclick="changeLightboxImage(-1)">[ &lt; ]</div>
+        <img id="lightbox-image" src="" alt="Full Resolution Artifact">
+        <div class="lightbox-nav lightbox-next" onclick="changeLightboxImage(1)">[ &gt; ]</div>
+        
+    </div>
+
+    <div id="hand-cursor"></div>
+    <video class="input_video" playsinline></video>
+
+    <script>
+        function filterCatalog(category, btnElement) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+            btnElement.classList.add('active-filter');
+
+            const products = document.querySelectorAll('#catalog-grid .product-card');
+            products.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                    card.classList.remove('active');
+                    void card.offsetWidth; 
+                    card.classList.add('active');
+                } else {
+                    card.style.display = 'none';
+                    card.classList.remove('active');
+                }
+            });
+        }
+
+        const bootSequenceLines = [
+            "FANDOM_HOUSE_OS <span class='boot-highlight'>[Version 3.1.0]</span>",
+            "(c) 2026 Multiverse Archival Corp. All rights reserved.",
+            " ",
+            "Initializing Kernel.......... <span class='boot-highlight'>OK</span>",
+            "Loading Optical Drivers...... <span class='boot-highlight'>OK</span>",
+            "Mounting Relic Drives........ <span class='boot-highlight'>OK</span>",
+            "Establishing Secure Uplink... <span class='boot-highlight'>OK</span>",
+            " ",
+            "Synchronizing Timelines...... <span class='boot-highlight'>SUCCESS</span>",
+            " ",
+            "<span class='boot-highlight'>Welcome to the Archive.</span>"
+        ];
+
+        async function runBootSequence() {
+            const container = document.getElementById('boot-text-container');
+            const bootScreen = document.getElementById('boot-screen');
+            
+            await new Promise(r => setTimeout(r, 500));
+
+            for (let i = 0; i < bootSequenceLines.length; i++) {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'boot-line';
+                lineDiv.innerHTML = bootSequenceLines[i];
+                container.appendChild(lineDiv);
+                
+                const delay = bootSequenceLines[i] === " " ? 100 : Math.random() * 200 + 150;
+                await new Promise(r => setTimeout(r, delay));
+            }
+
+            await new Promise(r => setTimeout(r, 2200));
+            
+            bootScreen.style.opacity = '0';
+            setTimeout(() => {
+                bootScreen.style.display = 'none';
+                triggerReveals(); 
+            }, 500);
+        }
+
+        window.addEventListener('load', runBootSequence);
+
+        setInterval(() => {
+            document.getElementById('os-clock').innerText = new Date().toLocaleTimeString([], { hour12: false }) + " LCT";
+        }, 1000);
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        function triggerReveals() {
+            if(document.getElementById('boot-screen').style.display === 'none') {
+                document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+            }
+        }
+
+        function switchPage(pageId, btnElement) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.querySelectorAll('.reveal').forEach(el => el.classList.remove('active'));
+            });
+            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
+            
+            window.scrollTo(0, 0);
+            setTimeout(triggerReveals, 50); 
+        }
+        triggerReveals();
+
+        let currentModalItem = null;
+        let currentGallery = [];
+        let currentGalleryIndex = 0;
+
+        function openModal(cardElement) {
+            currentModalItem = {
+                id: cardElement.dataset.id,
+                title: cardElement.dataset.title,
+                price: cardElement.dataset.price
+            };
+            document.getElementById('modal-title').innerText = cardElement.dataset.title;
+            document.getElementById('modal-tag').innerText = cardElement.dataset.tag;
+            document.getElementById('modal-desc').innerText = cardElement.dataset.desc;
+            document.getElementById('modal-price').innerText = cardElement.dataset.price + " USD";
+            
+            const galleryDataNode = cardElement.querySelector('.product-gallery-data');
+            
+            if (galleryDataNode) {
+                const imgNodes = galleryDataNode.querySelectorAll('img');
+                currentGallery = Array.from(imgNodes).map(img => img.src);
+            } else {
+                currentGallery = [];
+            }
+
+            const navContainer = document.getElementById('modal-gallery-nav');
+            currentGalleryIndex = 0;
+            
+            if (currentGallery.length > 0) {
+                renderModalImage();
+                
+                if (currentGallery.length > 1) {
+                    navContainer.style.display = 'flex';
+                    navContainer.innerHTML = currentGallery.map((img, idx) => 
+                        `<div class="gallery-thumb ${idx === 0 ? 'active-thumb' : ''}" onclick="setModalImage(${idx})">
+                            <img src="${img}" alt="Thumbnail ${idx+1}">
+                        </div>`
+                    ).join('');
+                } else {
+                    navContainer.style.display = 'none';
+                }
+            } else {
+                const modalImg = document.getElementById('main-modal-image');
+                modalImg.innerHTML = '[ HI-RES_PREVIEW.PNG ]';
+                modalImg.style.borderStyle = 'dashed';
+                modalImg.classList.remove('zoomable');
+                modalImg.onclick = null;
+                navContainer.style.display = 'none';
+            }
+            
+            const modal = document.getElementById('product-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function setModalImage(index) {
+            currentGalleryIndex = index;
+            renderModalImage();
+            
+            document.querySelectorAll('.gallery-thumb').forEach((thumb, idx) => {
+                if (idx === index) thumb.classList.add('active-thumb');
+                else thumb.classList.remove('active-thumb');
+            });
+        }
+
+        function renderModalImage() {
+            const modalImg = document.getElementById('main-modal-image');
+            const imgSrc = currentGallery[currentGalleryIndex];
+            
+            modalImg.innerHTML = `<img src="${imgSrc}" alt="Product Image">`;
+            modalImg.innerHTML += `<div class="zoom-signifier">[ + ZOOM ]</div>`;
+            modalImg.style.borderStyle = 'solid';
+            modalImg.classList.add('zoomable');
+            modalImg.onclick = () => openLightbox(); // We no longer pass the source here
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('product-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 200); 
+        }
+
+        function openLightbox() {
+            if (currentGallery.length === 0) return;
+            const lightbox = document.getElementById('lightbox-overlay');
+            const lightboxImg = document.getElementById('lightbox-image');
+            lightboxImg.src = currentGallery[currentGalleryIndex];
+            
+            // Show or hide arrows depending on the number of images
+            const navs = document.querySelectorAll('.lightbox-nav');
+            if (currentGallery.length > 1) {
+                navs.forEach(nav => nav.style.display = 'block');
+            } else {
+                navs.forEach(nav => nav.style.display = 'none');
+            }
+
+            lightbox.style.display = 'flex';
+            setTimeout(() => lightbox.classList.add('active'), 10);
+        }
+
+        function changeLightboxImage(direction) {
+            if (currentGallery.length <= 1) return;
+            
+            currentGalleryIndex += direction;
+            
+            // Loop back around if we reach the end or beginning
+            if (currentGalleryIndex < 0) currentGalleryIndex = currentGallery.length - 1;
+            if (currentGalleryIndex >= currentGallery.length) currentGalleryIndex = 0;
+            
+            document.getElementById('lightbox-image').src = currentGallery[currentGalleryIndex];
+            
+            // Update the main modal thumb beneath the lightbox so it's ready when closed
+            setModalImage(currentGalleryIndex); 
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox-overlay');
+            lightbox.classList.remove('active');
+            setTimeout(() => lightbox.style.display = 'none', 200);
+        }
+
+        // Add keyboard support for Lightbox navigation
+        window.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox-overlay');
+            if (lightbox.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') changeLightboxImage(-1);
+                if (e.key === 'ArrowRight') changeLightboxImage(1);
+                if (e.key === 'Escape') closeLightbox();
+            }
+        });
+
+        document.getElementById('modal-add-btn').addEventListener('click', () => {
+            if(currentModalItem) { addToCart(currentModalItem); closeModal(); }
+        });
+
+        let shoppingCart = {}; 
+        function addToCart(itemData) {
+            const id = itemData.id;
+            if (shoppingCart[id]) shoppingCart[id].qty += 1;
+            else shoppingCart[id] = { title: itemData.title, price: parseInt(itemData.price), qty: 1 };
+            updateCartUI();
+            
+            const badge = document.querySelector('.cart-badge');
+            badge.classList.add('danger');
+            setTimeout(()=> badge.classList.remove('danger'), 400);
+        }
+
+        function removeFromCart(id) { delete shoppingCart[id]; updateCartUI(); }
+
+        function changeQty(id, delta) {
+            if (shoppingCart[id]) {
+                shoppingCart[id].qty += delta;
+                if (shoppingCart[id].qty <= 0) {
+                    delete shoppingCart[id]; 
+                }
+                updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            const keys = Object.keys(shoppingCart);
+            let totalItems = 0; let totalCR = 0; 
+            const list = document.getElementById('cart-items-list');
+            list.innerHTML = ''; 
+
+            if (keys.length === 0) {
+                document.getElementById('cart-empty-msg').style.display = 'block';
+                document.getElementById('cart-content-area').style.display = 'none';
+            } else {
+                document.getElementById('cart-empty-msg').style.display = 'none';
+                document.getElementById('cart-content-area').style.display = 'block';
+
+                keys.forEach(id => {
+                    const item = shoppingCart[id];
+                    totalItems += item.qty; totalCR += (item.price * item.qty);
+                    const div = document.createElement('div');
+                    div.className = 'cart-item reveal active';
+                    div.innerHTML = `
+                        <div>
+                            <h3>${item.title}</h3>
+                            <div style="display:flex; align-items:center; gap: 10px; margin-top: 5px;">
+                                <span style="color:var(--os-primary);">${item.price} USD &nbsp;|</span>
+                                <button onclick="changeQty('${id}', -1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">-</button>
+                                <span style="color:var(--os-ink); font-weight: 700;">QTY: ${item.qty}</span>
+                                <button onclick="changeQty('${id}', 1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">+</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span style="font-weight: 700; font-size:1.2em; color: var(--os-ink);">${item.price * item.qty} USD</span>
+                            <button class="danger" onclick="removeFromCart('${id}')">[X]</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+            document.getElementById('nav-cart-count').innerText = totalItems;
+            document.getElementById('cart-total-display').innerText = totalCR;
+        }
+
+        function goToCheckout() {
+            document.getElementById('checkout-total').innerText = document.getElementById('cart-total-display').innerText;
+            switchPage('checkout', null);
+        }
+
+        function processOrder() {
+            shoppingCart = {};
+            updateCartUI();
+            switchPage('success', null);
+        }
+
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const cursor = document.getElementById('hand-cursor');
+        const statusText = document.getElementById('status');
+        const toggleBtn = document.getElementById('toggleCam');
+        const sensitivitySlider = document.getElementById('sensSlider');
+        const navCartBtn = document.getElementById('nav-cart');
+
+        let isCameraActive = false;
+        let camera = null, hands = null;
+
+        let targetX = window.innerWidth / 2, targetY = window.innerHeight / 2;
+        let currentX = window.innerWidth / 2, currentY = window.innerHeight / 2;
+        let lastStableX = currentX, lastStableY = currentY;
+        let prevX = currentX, prevY = currentY;
+        let velocityX = 0, velocityY = 0;
+        
+        const BASE_SMOOTHING = 0.05; 
+        const JITTER_THRESHOLD = 2.5; 
+        const PINCH_THRESHOLD = 0.05; 
+        
+        let isDragging = false, isScrolling = false, isClicking = false;
+        let dragStartY = 0, scrollStartY = 0;
+        let ghostEl = null, draggedItem = null;
+
+        const getDist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+
+        let mouseDownY = 0;
+        window.addEventListener('mousemove', (e) => {
+            if (!isCameraActive) {
+                targetX = e.clientX; targetY = e.clientY;
+                cursor.style.display = "block"; 
+            }
+        });
+        
+        window.addEventListener('mousedown', (e) => { 
+            if(!isCameraActive) { 
+                mouseDownY = e.clientY;
+                const el = document.elementFromPoint(currentX, currentY);
+                const isModalOpen = document.getElementById('product-modal').classList.contains('active');
+                const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
+                const card = el ? el.closest('.product-card') : null;
+
+                if(card && !isModalOpen && !isLightboxOpen) {
+                    isDragging = true;
+                    initiateDrag(card);
+                } else if (!el || !el.closest('button, a, .close-btn, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
+                    isScrolling = true;
+                    dragStartY = currentY; scrollStartY = window.scrollY;
+                    cursor.classList.add('pinched');
+                } else {
+                    isClicking = true; cursor.classList.add('clicking');
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => { 
+            if(!isCameraActive) { 
+                if (isDragging) {
+                    const dragDistY = Math.abs(e.clientY - mouseDownY);
+                    if (dragDistY < 5 && draggedItem && draggedItem.sourceCard) {
+                        openModal(draggedItem.sourceCard);
+                        cancelDrag();
+                    } else {
+                        handleDropZone();
+                    }
+                }
+                if (isScrolling) { isScrolling = false; cursor.classList.remove('pinched'); }
+                if (isClicking) { isClicking = false; cursor.classList.remove('clicking'); }
+            }
+        });
+
+        function onResults(results) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const thumbTip = landmarks[4], indexTip = landmarks[8], middleTip = landmarks[12];
+                const ringTip = landmarks[16], pinkyTip = landmarks[20], middlePip = landmarks[10];
+                
+                const rawX = 1.0 - indexTip.x; const rawY = indexTip.y;
+                const activePadding = parseFloat(sensitivitySlider.value);
+                
+                let mappedX = (rawX - activePadding) / (1 - 2 * activePadding);
+                let mappedY = (rawY - activePadding) / (1 - 2 * activePadding);
+
+                mappedX = Math.max(0, Math.min(1, mappedX));
+                mappedY = Math.max(0, Math.min(1, mappedY));
+
+                const newTargetX = mappedX * window.innerWidth;
+                const newTargetY = mappedY * window.innerHeight;
+
+                const dist = Math.sqrt(Math.pow(newTargetX - lastStableX, 2) + Math.pow(newTargetY - lastStableY, 2));
+                if (dist > JITTER_THRESHOLD) {
+                    targetX = newTargetX;
+                    targetY = newTargetY;
+                    lastStableX = newTargetX;
+                    lastStableY = newTargetY;
+                }
+
+                cursor.style.display = "block";
+
+                const distIT = getDist(indexTip, thumbTip), distMT = getDist(middleTip, thumbTip);
+                const distRT = getDist(ringTip, thumbTip), distMPIP = getDist(middlePip, thumbTip); 
+
+                const isGrabbing = distIT < 0.08 && distMT < 0.08 && distRT < 0.1;
+                const isHandOpen = distIT > 0.12 || distMT > 0.12;
+
+                if (!isClicking && !isDragging && !isScrolling) {
+                    if (distMPIP < PINCH_THRESHOLD && !isGrabbing) {
+                        isClicking = true; cursor.classList.add('clicking');
+                        triggerDOMClick(currentX, currentY);
+                    }
+                } else if (distMPIP > PINCH_THRESHOLD + 0.02) {
+                    isClicking = false; cursor.classList.remove('clicking');
+                }
+
+                if (!isDragging && !isScrolling && !isClicking) {
+                    if (isGrabbing) {
+                        const el = document.elementFromPoint(currentX, currentY);
+                        const isModalOpen = document.getElementById('product-modal').classList.contains('active');
+                        const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
+                        if (!isModalOpen && !isLightboxOpen) {
+                            const card = el ? el.closest('.product-card') : null;
+                            if (card) {
+                                isDragging = true;
+                                initiateDrag(card);
+                            }
+                        }
+                    }
+                } else if (isDragging && isHandOpen) {
+                    handleDropZone();
+                }
+
+                if (!isDragging && !isClicking) {
+                    if (distIT < PINCH_THRESHOLD && !isGrabbing) {
+                        const el = document.elementFromPoint(currentX, currentY);
+                        if (!el || !el.closest('a, button, input, #nav-cart, .modal-overlay, #lightbox-overlay')) {
+                            if (!isScrolling) { 
+                                isScrolling = true; cursor.classList.add('pinched');
+                                dragStartY = currentY; scrollStartY = window.scrollY; 
+                            }
+                        }
+                    } else if (distIT > PINCH_THRESHOLD + 0.02) { 
+                        isScrolling = false; cursor.classList.remove('pinched');
+                    }
+                }
+
+            } else { 
+                if (isCameraActive) cursor.style.display = "none"; 
+                isScrolling = false; isClicking = false;
+            }
+        }
+
+        function initiateDrag(cardEl) {
+            draggedItem = { 
+                id: cardEl.dataset.id, 
+                title: cardEl.dataset.title, 
+                price: cardEl.dataset.price,
+                sourceCard: cardEl 
+            };
+            cursor.classList.add('dragging');
+            ghostEl = document.createElement('div');
+            ghostEl.className = 'ghost-card';
+            ghostEl.innerHTML = `<h3>${draggedItem.title}</h3><p style="margin:5px 0 0 0; color:var(--os-primary);">${draggedItem.price} USD</p>`;
+            document.body.appendChild(ghostEl);
+            navCartBtn.classList.add('active-zone');
+            cardEl.style.opacity = '0.5'; 
+        }
+
+        function cancelDrag() {
+            if (draggedItem && draggedItem.sourceCard) { draggedItem.sourceCard.style.opacity = '1'; }
+            isDragging = false; cursor.classList.remove('dragging');
+            if(ghostEl) ghostEl.remove(); ghostEl = null;
+            navCartBtn.classList.remove('active-zone');
+            draggedItem = null;
+        }
+
+        function handleDropZone() {
+            const rect = navCartBtn.getBoundingClientRect();
+            const pad = 80; 
+            if (currentX > (rect.left - pad) && currentX < (rect.right + pad) && currentY > (rect.top - pad) && currentY < (rect.bottom + pad)) {
+                addToCart(draggedItem);
+                navCartBtn.classList.add('flash');
+                setTimeout(()=>navCartBtn.classList.remove('flash'), 500);
+            }
+            cancelDrag();
+        }
+
+        function triggerDOMClick(x, y) {
+            const oldPE = ghostEl ? ghostEl.style.pointerEvents : '';
+            if (ghostEl) ghostEl.style.pointerEvents = 'none';
+
+            const el = document.elementFromPoint(x, y);
+            if (el) {
+                if (el.id === 'lightbox-overlay' || el.classList.contains('lightbox-close')) {
+                    closeLightbox();
+                } else if (el.classList.contains('modal-overlay')) {
+                    closeModal();
+                } else {
+                    const clickable = el.closest('button, a, .close-btn, input, .product-card, #nav-cart, .filter-btn, .modal-image.zoomable, .gallery-thumb, .lightbox-nav');
+                    if (clickable) {
+                        clickable.click();
+                        clickable.style.transform = 'scale(0.95)';
+                        setTimeout(() => clickable.style.transform = '', 150);
+                    }
+                }
+            }
+            if (ghostEl) ghostEl.style.pointerEvents = oldPE;
+        }
+
+        function animate() {
+            prevX = currentX; prevY = currentY;
+
+            if (!isClicking) {
+                currentX += (targetX - currentX) * BASE_SMOOTHING;
+                currentY += (targetY - currentY) * BASE_SMOOTHING;
+            }
+            
+            velocityX = currentX - prevX;
+            velocityY = currentY - prevY;
+            
+            let cursorScale = isClicking ? 'scale(0.7)' : 'scale(1)';
+            cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%) ${cursorScale}`;
+            
+            if (ghostEl) { 
+                const tiltX = Math.max(-15, Math.min(15, velocityY * 0.5)); 
+                const tiltY = Math.max(-15, Math.min(15, -velocityX * 0.5)); 
+                ghostEl.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%) perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+            }
+
+            if (isScrolling) {
+                const deltaY = currentY - dragStartY;
+                window.scrollTo(0, scrollStartY - (deltaY * 3.0)); 
+            }
+
+            document.querySelectorAll('.hovered').forEach(h => h.classList.remove('hovered'));
+            const el = document.elementFromPoint(currentX, currentY);
+            if(el && !isDragging) {
+                const hoverable = el.closest('button, a, .close-btn, input, .product-card, .filter-btn, .modal-image.zoomable, .lightbox-close, .gallery-thumb, .lightbox-nav');
+                if(hoverable) hoverable.classList.add('hovered');
+                
+                if (el.closest('#nav-cart') && !isDragging) {
+                    navCartBtn.style.transform = 'scale(1.05)';
+                    navCartBtn.style.borderColor = 'var(--os-ink)';
+                    navCartBtn.style.color = 'var(--os-ink)';
+                } else if (!isDragging && !navCartBtn.classList.contains('flash')) {
+                    navCartBtn.style.transform = '';
+                    navCartBtn.style.borderColor = '';
+                    navCartBtn.style.color = '';
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate(); 
+
+        function toggleCamera() {
+            if (!isCameraActive) {
+                toggleBtn.innerText = "INITIALIZING...";
+                statusText.innerText = "OPTICS: INITIALIZING...";
+                
+                hands = new Hands({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+                hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4});
+                hands.onResults(onResults);
+                
+                camera = new Camera(videoElement, {onFrame: async () => await hands.send({image: videoElement}), width: 640, height: 480});
+                
+                camera.start().then(() => {
+                    isCameraActive = true; 
+                    statusText.innerText = "OPTICS: ONLINE";
+                    statusText.style.background = "var(--os-ink)";
+                    statusText.style.color = "var(--os-bg)";
+                    toggleBtn.innerText = "SHUTDOWN_OPTICS";
+                    
+                    targetX = window.innerWidth / 2; targetY = window.innerHeight / 2;
+                    currentX = targetX; currentY = targetY;
+                    lastStableX = currentX; lastStableY = currentY;
+                });
+            } else {
+                location.reload(); 
+            }
+        }
+    </script>
+</body>
+</html>
