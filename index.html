@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fandom House | Archive Terminal</title>
+    <title>Fandom House</title>
     
+    <link rel="icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="https://use.typekit.net/epe0nqq.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -562,7 +563,6 @@
                     <button class="filter-btn" onclick="filterCatalog('literature', this)">[ LITERATURE & TEXTS ]</button>
                     <button class="filter-btn" onclick="filterCatalog('audio', this)">[ AUDIO & MUSIC ]</button>
                     <button class="filter-btn" onclick="filterCatalog('ephemera', this)">[ ARCHIVAL EPHEMERA ]</button>
-                    <button class="filter-btn" onclick="filterCatalog('trinkets', this)">[ TRINKETS & RELICS ]</button>
                 </div>
 
                 <div class="card-grid" id="catalog-grid">
@@ -625,8 +625,6 @@
                         </div>
                     </div>
 
-                   
-
                     <div class="product-card reveal" data-category="ephemera" data-id="p6" data-title="Silo the Stairwell Pop-Up Card" data-price="8" data-tag="ARCHIVAL EPHEMERA" data-desc="A pop-up card of the Stairwell for when you're far apart. A thoughtful gift for those separated by the long climb between the Up Top and the Down Deep." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
                             <img src="placeholder1.png" alt="Placeholder 1">
@@ -653,28 +651,31 @@
                         </div>
                     </div>
 
-                    <div class="product-card reveal" data-category="trinkets" data-id="p8" data-title="Trinket 1" data-price="120" data-tag="TRINKETS & RELICS" data-desc="A heavy, machined physical artifact. Represents a core piece of everyday carry hardware from a secured timeline." onclick="openModal(this)">
+                    <div class="product-card reveal" data-category="literature" data-id="p8" data-title="The Pact - Young Readers Edition" data-price="40" data-tag="LITERATURE & TEXTS" data-desc="A heavy, machined physical artifact. Represents a core piece of everyday carry hardware from a secured timeline." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
-                            <img src="placeholder1.png" alt="Placeholder 1">
-                            <img src="placeholder2.png" alt="Placeholder 2">
+                            <img src="thepact1.jpg" alt="The Pact - Young Readers Edition Cover">
+                            <img src="thepact2.jpg" alt="The Pact - Young Readers Edition Sample Page">
                         </div>
-                        <span class="universe-tag">TRINKETS & RELICS</span>
-                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                         <div class="image-viewer" style="border-style: solid;">
+                            <img src="thepact1.jpg" alt="The Pact - Young Readers Edition Cover">
+                        </div>
                         <div>
-                            <h3>Trinket 1</h3>
-                            <span class="price">120 USD</span>
+                            <h3>The Pact - Young Readers Edition</h3>
+                            <span class="price">40 USD</span>
                         </div>
                     </div>
 
-                    <div class="product-card reveal" data-category="trinkets" data-id="p9" data-title="Pin 1" data-price="15" data-tag="TRINKETS & RELICS" data-desc="A durable, hard-enamel lapel pin with a secure rubber backing. Subtle insignia representing faction loyalty." onclick="openModal(this)">
+                    <div class="product-card reveal" data-category="audio" data-id="p9" data-title="GLaDOS' Greatest Hits CD" data-price="15" data-tag="AUDIO & MUSIC" data-desc="A collection of department-approved Aperture Science vocal performances. Includes 'Still Alive' and 'Want You Gone'. Unauthorized testing while listening is encouraged." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
-                            <img src="placeholder1.png" alt="Placeholder 1">
-                            <img src="placeholder2.png" alt="Placeholder 2">
+                            <img src="glados1.jpg" alt="GLaDOS CD Cover 1">
+                            <img src="glados2.jpg" alt="GLaDOS CD Cover 2">
                         </div>
-                        <span class="universe-tag">TRINKETS & RELICS</span>
-                        <div class="image-viewer">[ PREVIEW_IMG.PNG ]</div>
-                        <div>
-                            <h3>Pin 1</h3>
+                        <span class="universe-tag">AUDIO & MUSIC</span>
+                         <div class="image-viewer" style="border-style: solid;">
+                            <img src="glados1.jpg" alt="GLaDOS CD Cover 1">
+                        </div>
+                            <h3>GLaDOS' Greatest Hits CD</h3>
                             <span class="price">15 USD</span>
                         </div>
                     </div>
@@ -969,7 +970,7 @@
             modalImg.innerHTML += `<div class="zoom-signifier">[ + ZOOM ]</div>`;
             modalImg.style.borderStyle = 'solid';
             modalImg.classList.add('zoomable');
-            modalImg.onclick = () => openLightbox(); // We no longer pass the source here
+            modalImg.onclick = () => openLightbox(); 
         }
 
         function closeModal() {
@@ -984,7 +985,6 @@
             const lightboxImg = document.getElementById('lightbox-image');
             lightboxImg.src = currentGallery[currentGalleryIndex];
             
-            // Show or hide arrows depending on the number of images
             const navs = document.querySelectorAll('.lightbox-nav');
             if (currentGallery.length > 1) {
                 navs.forEach(nav => nav.style.display = 'block');
@@ -1001,13 +1001,11 @@
             
             currentGalleryIndex += direction;
             
-            // Loop back around if we reach the end or beginning
             if (currentGalleryIndex < 0) currentGalleryIndex = currentGallery.length - 1;
             if (currentGalleryIndex >= currentGallery.length) currentGalleryIndex = 0;
             
             document.getElementById('lightbox-image').src = currentGallery[currentGalleryIndex];
             
-            // Update the main modal thumb beneath the lightbox so it's ready when closed
             setModalImage(currentGalleryIndex); 
         }
 
@@ -1017,7 +1015,6 @@
             setTimeout(() => lightbox.style.display = 'none', 200);
         }
 
-        // Add keyboard support for Lightbox navigation
         window.addEventListener('keydown', (e) => {
             const lightbox = document.getElementById('lightbox-overlay');
             if (lightbox.classList.contains('active')) {
@@ -1119,7 +1116,7 @@
         let targetX = window.innerWidth / 2, targetY = window.innerHeight / 2;
         let currentX = window.innerWidth / 2, currentY = window.innerHeight / 2;
         let lastStableX = currentX, lastStableY = currentY;
-        let prevX = currentX, prevY = currentY;
+        let prevX = window.innerWidth / 2, prevY = window.innerHeight / 2;
         let velocityX = 0, velocityY = 0;
         
         const BASE_SMOOTHING = 0.05; 
@@ -1306,8 +1303,11 @@
                     const clickable = el.closest('button, a, .close-btn, input, .product-card, #nav-cart, .filter-btn, .modal-image.zoomable, .gallery-thumb, .lightbox-nav');
                     if (clickable) {
                         clickable.click();
-                        clickable.style.transform = 'scale(0.95)';
-                        setTimeout(() => clickable.style.transform = '', 150);
+                        // Prevent the jump/scale effect on lightbox arrows
+                        if (!clickable.classList.contains('lightbox-nav')) {
+                            clickable.style.transform = 'scale(0.95)';
+                            setTimeout(() => clickable.style.transform = '', 150);
+                        }
                     }
                 }
             }
