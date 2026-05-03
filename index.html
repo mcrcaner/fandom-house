@@ -8,8 +8,9 @@
     <link rel="icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="https://use.typekit.net/epe0nqq.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- Added 'defer' to prevent heavy scripts from blocking the page load on mobile -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous" defer></script>
 
     <style>
         :root {
@@ -834,7 +835,8 @@
     </div>
 
     <div id="hand-cursor"></div>
-    <video class="input_video" playsinline></video>
+    <!-- Added autoplay and muted to prevent video failures on iOS/Safari -->
+    <video class="input_video" autoplay muted playsinline></video>
 
     <script>
         function filterCatalog(category, btnElement) {
@@ -894,7 +896,8 @@
             }, 500);
         }
 
-        window.addEventListener('load', runBootSequence);
+        // Switched from window.load to DOMContentLoaded so the text animation starts immediately
+        document.addEventListener('DOMContentLoaded', runBootSequence);
 
         setInterval(() => {
             document.getElementById('os-clock').innerText = new Date().toLocaleTimeString([], { hour12: false }) + " LCT";
@@ -1190,11 +1193,11 @@
                 const card = el ? el.closest('.product-card') : null;
 
                 if(card && !isModalOpen && !isLightboxOpen) {
-                    e.preventDefault(); // Prevents browser's native image drag hijacking
+                    e.preventDefault(); 
                     isDragging = true;
                     initiateDrag(card);
                 } else if (!el || !el.closest('button, a, .close-btn, input, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
-                    e.preventDefault(); // Prevents text selection while custom scrolling
+                    e.preventDefault(); 
                     isScrolling = true;
                     dragStartY = currentY; scrollStartY = window.scrollY;
                     cursor.classList.add('pinched');
@@ -1249,7 +1252,9 @@
             if (!isCameraActive && e.touches.length > 0) {
                 targetX = e.touches[0].clientX; targetY = e.touches[0].clientY;
                 cursor.style.display = "block";
-                if(isDragging || isScrolling) e.preventDefault(); // Prevent native scroll while custom interactions are active
+                if(isDragging || isScrolling) {
+                    if (e.cancelable) e.preventDefault(); // Added cancelable check for stricter mobile browsers
+                }
             }
         }, {passive: false});
 
