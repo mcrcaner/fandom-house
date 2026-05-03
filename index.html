@@ -312,7 +312,7 @@
         }
 
         .ghost-card {
-            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10001; 
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10005; 
             background: var(--os-panel); border: 2px solid var(--os-ink);
             padding: 20px; width: 280px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
             opacity: 0.9;
@@ -323,7 +323,7 @@
         #hand-cursor {
             position: fixed; top: 0; left: 0; width: 24px; height: 24px;
             border: 2px solid var(--os-primary); background: rgba(137, 208, 204, 0.2); 
-            pointer-events: none; z-index: 10000; display: none;
+            pointer-events: none; z-index: 10006; display: none;
             transition: width 0.1s, height 0.1s, background 0.1s, border-color 0.1s;
             will-change: transform;
         }
@@ -343,7 +343,7 @@
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 10, 17, 0.9);
-            z-index: 5000; display: none; justify-content: center; align-items: center;
+            z-index: 10002; display: none; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.2s ease;
         }
         .modal-overlay.active { display: flex; opacity: 1; }
@@ -407,7 +407,7 @@
         #lightbox-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 10, 17, 0.95);
-            z-index: 6000; display: none; justify-content: center; align-items: center;
+            z-index: 10003; display: none; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.2s ease; cursor: zoom-out;
         }
         #lightbox-overlay.active { display: flex; opacity: 1; }
@@ -430,7 +430,7 @@
             position: absolute; top: 50%; transform: translateY(-50%);
             color: var(--os-primary); font-size: 3em; font-weight: 700;
             cursor: pointer; user-select: none; transition: all 0.2s;
-            z-index: 6001; background: transparent; padding: 20px;
+            z-index: 10004; background: transparent; padding: 20px;
         }
         .lightbox-nav:hover, .lightbox-nav.hovered {
             color: var(--os-ink); text-shadow: var(--os-glow);
@@ -453,6 +453,36 @@
         .terminal-input::placeholder { color: rgba(137, 208, 204, 0.4); }
 
         footer { text-align: center; padding: 30px 20px; font-size: 0.85em; font-weight: 600; color: var(--os-primary); border-top: 1px dashed var(--os-primary); margin-top: auto; }
+
+        /* --- MOBILE & TABLET RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; background-size: 20px 20px; }
+            .os-taskbar { flex-direction: column; gap: 10px; padding: 15px; align-items: stretch; text-align: center; }
+            .os-brand { justify-content: center; }
+            .os-stats { justify-content: center; }
+            .window-titlebar { flex-direction: column; text-align: center; gap: 10px; font-size: 0.85em; }
+            .internal-nav { flex-direction: column; align-items: stretch; padding: 15px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            #nav-cart { justify-content: center; margin-top: 10px; }
+            .hardware-panel { flex-direction: column; gap: 15px; align-items: stretch; text-align: center; }
+            .hardware-controls { flex-direction: column; width: 100%; }
+            .hardware-controls input[type=range] { width: 100%; }
+            .page { padding: 20px 15px; }
+            .hero-section { padding: 40px 15px; }
+            .hero-title { font-size: 2.2em; }
+            .hero-subtitle { font-size: 1em; }
+            .section-header { font-size: 1.2em; text-align: center; }
+            .filter-bar { justify-content: center; }
+            .modal-inner { padding: 20px; }
+            .modal-header { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
+            .modal-header h2 { margin-right: 0 !important; }
+            .modal-image { max-height: 40vh; }
+            .lightbox-close { top: 15px; right: 15px; font-size: 2em; }
+            .lightbox-nav { font-size: 2em; padding: 10px; }
+            .cart-item { flex-direction: column; align-items: stretch; text-align: center; gap: 15px; }
+            .cart-item > div { justify-content: center; flex-direction: column; }
+            .cart-item img { margin: 0 auto 15px auto !important; }
+        }
     </style>
 </head>
 <body>
@@ -466,7 +496,7 @@
     </div>
 
     <div class="os-taskbar terminal-panel flicker-fast">
-        <div class="os-brand">
+        <div class="os-brand" onclick="switchPage('home', document.querySelectorAll('.nav-links a')[0])" style="cursor: pointer;" title="Return to Overview">
             <img src="logo4.png" alt="Fandom House" class="fh-logo-img">
         </div>
         <div class="os-stats">
@@ -668,12 +698,12 @@
 
                     <div class="product-card reveal" data-category="audio" data-id="p9" data-title="GLaDOS' Greatest Hits CD" data-price="15" data-tag="AUDIO & MUSIC" data-desc="A collection of department-approved Aperture Science vocal performances. Includes 'Still Alive' and 'Want You Gone'. Unauthorized testing while listening is encouraged." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
-                            <img src="glados1.jpg" alt="GLaDOS CD Cover 1">
-                            <img src="glados2.jpg" alt="GLaDOS CD Cover 2">
+                            <img src="glados1.jpg" alt="Cover Art">
+                            <img src="glados2.jpg" alt="Back Cover">
                         </div>
                         <span class="universe-tag">AUDIO & MUSIC</span>
-                         <div class="image-viewer" style="border-style: solid;">
-                            <img src="glados1.jpg" alt="GLaDOS CD Cover 1">
+                        <div class="image-viewer" style="border-style: solid;">
+                            <img src="glados1.jpg" alt="GLaDOS' Greatest Hits CD">
                         </div>
                         <div>
                             <h3>GLaDOS' Greatest Hits CD</h3>
@@ -904,10 +934,12 @@
         let currentGalleryIndex = 0;
 
         function openModal(cardElement) {
+            const imgNode = cardElement.querySelector('.image-viewer img');
             currentModalItem = {
                 id: cardElement.dataset.id,
                 title: cardElement.dataset.title,
-                price: cardElement.dataset.price
+                price: cardElement.dataset.price,
+                img: imgNode ? imgNode.src : null
             };
             document.getElementById('modal-title').innerText = cardElement.dataset.title;
             document.getElementById('modal-tag').innerText = cardElement.dataset.tag;
@@ -1033,7 +1065,7 @@
         function addToCart(itemData) {
             const id = itemData.id;
             if (shoppingCart[id]) shoppingCart[id].qty += 1;
-            else shoppingCart[id] = { title: itemData.title, price: parseInt(itemData.price), qty: 1 };
+            else shoppingCart[id] = { title: itemData.title, price: parseInt(itemData.price), qty: 1, img: itemData.img };
             updateCartUI();
             
             const badge = document.querySelector('.cart-badge');
@@ -1071,14 +1103,22 @@
                     totalItems += item.qty; totalCR += (item.price * item.qty);
                     const div = document.createElement('div');
                     div.className = 'cart-item reveal active';
+                    
+                    const imgHTML = item.img 
+                        ? `<img src="${item.img}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid var(--os-primary); background: var(--os-bg); padding: 5px; margin-right: 20px;">` 
+                        : `<div style="width: 60px; height: 60px; border: 1px dashed var(--os-primary); background: var(--os-bg); margin-right: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.6em; color: var(--os-primary); text-align: center;">[ IMG ]</div>`;
+
                     div.innerHTML = `
-                        <div>
-                            <h3>${item.title}</h3>
-                            <div style="display:flex; align-items:center; gap: 10px; margin-top: 5px;">
-                                <span style="color:var(--os-primary);">${item.price} USD &nbsp;|</span>
-                                <button onclick="changeQty('${id}', -1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">-</button>
-                                <span style="color:var(--os-ink); font-weight: 700;">QTY: ${item.qty}</span>
-                                <button onclick="changeQty('${id}', 1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">+</button>
+                        <div style="display:flex; align-items:center;">
+                            ${imgHTML}
+                            <div>
+                                <h3>${item.title}</h3>
+                                <div style="display:flex; align-items:center; gap: 10px; margin-top: 5px;">
+                                    <span style="color:var(--os-primary);">${item.price} USD &nbsp;|</span>
+                                    <button onclick="changeQty('${id}', -1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">-</button>
+                                    <span style="color:var(--os-ink); font-weight: 700;">QTY: ${item.qty}</span>
+                                    <button onclick="changeQty('${id}', 1)" style="padding: 2px 8px; background: transparent; color: var(--os-primary); border-color: var(--os-primary);">+</button>
+                                </div>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap: 20px;">
@@ -1140,6 +1180,9 @@
         
         window.addEventListener('mousedown', (e) => { 
             if(!isCameraActive) { 
+                targetX = e.clientX; targetY = e.clientY;
+                currentX = e.clientX; currentY = e.clientY;
+
                 mouseDownY = e.clientY;
                 const el = document.elementFromPoint(currentX, currentY);
                 const isModalOpen = document.getElementById('product-modal').classList.contains('active');
@@ -1147,9 +1190,11 @@
                 const card = el ? el.closest('.product-card') : null;
 
                 if(card && !isModalOpen && !isLightboxOpen) {
+                    e.preventDefault(); // Prevents browser's native image drag hijacking
                     isDragging = true;
                     initiateDrag(card);
-                } else if (!el || !el.closest('button, a, .close-btn, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
+                } else if (!el || !el.closest('button, a, .close-btn, input, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
+                    e.preventDefault(); // Prevents text selection while custom scrolling
                     isScrolling = true;
                     dragStartY = currentY; scrollStartY = window.scrollY;
                     cursor.classList.add('pinched');
@@ -1174,6 +1219,56 @@
                 if (isClicking) { isClicking = false; cursor.classList.remove('clicking'); }
             }
         });
+
+        // --- MOBILE TOUCH SUPPORT ---
+        window.addEventListener('touchstart', (e) => {
+            if (!isCameraActive && e.touches.length > 0) {
+                targetX = e.touches[0].clientX; targetY = e.touches[0].clientY;
+                currentX = targetX; currentY = targetY;
+                mouseDownY = targetY;
+                
+                const el = document.elementFromPoint(currentX, currentY);
+                const isModalOpen = document.getElementById('product-modal').classList.contains('active');
+                const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
+                const card = el ? el.closest('.product-card') : null;
+
+                if(card && !isModalOpen && !isLightboxOpen) {
+                    isDragging = true;
+                    initiateDrag(card);
+                } else if (!el || !el.closest('button, a, .close-btn, input, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
+                    isScrolling = true;
+                    dragStartY = currentY; scrollStartY = window.scrollY;
+                    cursor.classList.add('pinched');
+                } else {
+                    isClicking = true; cursor.classList.add('clicking');
+                }
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isCameraActive && e.touches.length > 0) {
+                targetX = e.touches[0].clientX; targetY = e.touches[0].clientY;
+                cursor.style.display = "block";
+                if(isDragging || isScrolling) e.preventDefault(); // Prevent native scroll while custom interactions are active
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchend', (e) => {
+            if (!isCameraActive) {
+                if (isDragging) {
+                    const dragDistY = Math.abs(currentY - mouseDownY);
+                    if (dragDistY < 5 && draggedItem && draggedItem.sourceCard) {
+                        openModal(draggedItem.sourceCard);
+                        cancelDrag();
+                    } else {
+                        handleDropZone();
+                    }
+                }
+                if (isScrolling) { isScrolling = false; cursor.classList.remove('pinched'); }
+                if (isClicking) { isClicking = false; cursor.classList.remove('clicking'); }
+            }
+        });
+        // ----------------------------
 
         function onResults(results) {
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -1256,16 +1351,19 @@
         }
 
         function initiateDrag(cardEl) {
+            const imgNode = cardEl.querySelector('.image-viewer img');
             draggedItem = { 
                 id: cardEl.dataset.id, 
                 title: cardEl.dataset.title, 
                 price: cardEl.dataset.price,
+                img: imgNode ? imgNode.src : null,
                 sourceCard: cardEl 
             };
             cursor.classList.add('dragging');
             ghostEl = document.createElement('div');
             ghostEl.className = 'ghost-card';
-            ghostEl.innerHTML = `<h3>${draggedItem.title}</h3><p style="margin:5px 0 0 0; color:var(--os-primary);">${draggedItem.price} USD</p>`;
+            const ghostImgHTML = draggedItem.img ? `<img src="${draggedItem.img}" style="width:100%; height:80px; object-fit:contain; margin-bottom:10px; border:1px solid var(--os-ink);">` : '';
+            ghostEl.innerHTML = `${ghostImgHTML}<h3>${draggedItem.title}</h3><p style="margin:5px 0 0 0; color:var(--os-primary);">${draggedItem.price} USD</p>`;
             document.body.appendChild(ghostEl);
             navCartBtn.classList.add('active-zone');
             cardEl.style.opacity = '0.5'; 
