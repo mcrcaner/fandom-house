@@ -1223,58 +1223,6 @@
             }
         });
 
-        // --- MOBILE TOUCH SUPPORT ---
-        window.addEventListener('touchstart', (e) => {
-            if (!isCameraActive && e.touches.length > 0) {
-                targetX = e.touches[0].clientX; targetY = e.touches[0].clientY;
-                currentX = targetX; currentY = targetY;
-                mouseDownY = targetY;
-                
-                const el = document.elementFromPoint(currentX, currentY);
-                const isModalOpen = document.getElementById('product-modal').classList.contains('active');
-                const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
-                const card = el ? el.closest('.product-card') : null;
-
-                if(card && !isModalOpen && !isLightboxOpen) {
-                    isDragging = true;
-                    initiateDrag(card);
-                } else if (!el || !el.closest('button, a, .close-btn, input, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
-                    isScrolling = true;
-                    dragStartY = currentY; scrollStartY = window.scrollY;
-                    cursor.classList.add('pinched');
-                } else {
-                    isClicking = true; cursor.classList.add('clicking');
-                }
-            }
-        }, {passive: false});
-
-        window.addEventListener('touchmove', (e) => {
-            if (!isCameraActive && e.touches.length > 0) {
-                targetX = e.touches[0].clientX; targetY = e.touches[0].clientY;
-                cursor.style.display = "block";
-                if(isDragging || isScrolling) {
-                    if (e.cancelable) e.preventDefault(); // Added cancelable check for stricter mobile browsers
-                }
-            }
-        }, {passive: false});
-
-        window.addEventListener('touchend', (e) => {
-            if (!isCameraActive) {
-                if (isDragging) {
-                    const dragDistY = Math.abs(currentY - mouseDownY);
-                    if (dragDistY < 5 && draggedItem && draggedItem.sourceCard) {
-                        openModal(draggedItem.sourceCard);
-                        cancelDrag();
-                    } else {
-                        handleDropZone();
-                    }
-                }
-                if (isScrolling) { isScrolling = false; cursor.classList.remove('pinched'); }
-                if (isClicking) { isClicking = false; cursor.classList.remove('clicking'); }
-            }
-        });
-        // ----------------------------
-
         function onResults(results) {
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
