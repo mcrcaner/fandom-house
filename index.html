@@ -8,9 +8,8 @@
     <link rel="icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="https://use.typekit.net/epe0nqq.css">
 
-    <!-- Added 'defer' to prevent heavy scripts from blocking the page load on mobile -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -23,6 +22,11 @@
             --os-border: #89d0cc;
             --os-glow: 0 0 12px rgba(146, 192, 108, 0.6), 0 0 3px rgba(146, 192, 108, 0.8);
             --os-glow-danger: 0 0 12px rgba(217, 75, 46, 0.7), 0 0 3px rgba(217, 75, 46, 1);
+
+            /* Custom SVG Hardware Cursors */
+            --cursor-default: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='2,2 2,18 7,14 15,14' fill='rgba(137, 208, 204, 0.2)' stroke='%2389d0cc' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, auto;
+            --cursor-pointer: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='2,2 2,18 7,14 15,14' fill='rgba(146, 192, 108, 0.4)' stroke='%2392c06c' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, pointer;
+            --cursor-zoom-out: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='2,2 2,18 7,14 15,14' fill='rgba(217, 75, 46, 0.2)' stroke='%23d94b2e' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, zoom-out;
         }
 
         * { box-sizing: border-box; }
@@ -35,7 +39,7 @@
                 linear-gradient(rgba(137, 208, 204, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(137, 208, 204, 0.05) 1px, transparent 1px);
             background-size: 40px 40px; 
-            cursor: default; overflow-x: hidden;
+            cursor: var(--cursor-default); overflow-x: hidden;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
             text-shadow: var(--os-glow);
@@ -116,7 +120,7 @@
             font-size: 0.9em; font-weight: 700; z-index: 100;
         }
 
-        .os-brand { display: flex; align-items: center; height: 45px; }
+        .os-brand { display: flex; align-items: center; height: 45px; cursor: var(--cursor-pointer); }
         .fh-logo-img {
             height: 100%; max-height: 45px; object-fit: contain;
         }
@@ -156,19 +160,22 @@
         }
 
         .nav-links { display: flex; gap: 15px; }
-        .nav-links a {
-            color: var(--os-primary); text-decoration: none; cursor: pointer;
+        .nav-links a, .hero-nav-btn {
+            color: var(--os-primary); text-decoration: none; cursor: var(--cursor-pointer);
             padding: 8px 16px; font-weight: 700; font-size: 1em;
             transition: all 0.2s; border: 1px solid transparent;
+            text-transform: uppercase; background: transparent;
         }
-        .nav-links a:hover, .nav-links a.active { 
+        .nav-links a:hover, .nav-links a.active, .hero-nav-btn:hover, .hero-nav-btn.hovered { 
             background: rgba(137, 208, 204, 0.15); color: var(--os-ink); 
             border-color: var(--os-ink);
+            transform: none;
+            box-shadow: none;
         }
 
         #nav-cart {
             border: 2px dashed var(--os-primary); background: transparent;
-            position: relative; padding: 10px 25px;
+            position: relative; padding: 10px 25px; cursor: var(--cursor-pointer);
             display: flex; align-items: center; gap: 10px;
             transition: all 0.2s; color: var(--os-primary);
         }
@@ -191,16 +198,16 @@
         .hardware-controls { display: flex; align-items: center; gap: 15px; }
 
         input[type=range] {
-            accent-color: var(--os-ink); cursor: pointer; width: 120px; height: 4px;
+            accent-color: var(--os-ink); cursor: var(--cursor-pointer); width: 120px; height: 4px;
             background: rgba(137, 208, 204, 0.3); appearance: none;
         }
         input[type=range]::-webkit-slider-thumb {
             appearance: none; width: 14px; height: 24px; background: var(--os-ink); 
-            cursor: pointer; border: 1px solid var(--os-bg);
+            cursor: var(--cursor-pointer); border: 1px solid var(--os-bg);
         }
 
         button {
-            font-family: 'forma-djr-mono', monospace; font-weight: 700; cursor: pointer;
+            font-family: 'forma-djr-mono', monospace; font-weight: 700; cursor: var(--cursor-pointer);
             font-size: 0.9rem; padding: 8px 16px; color: var(--os-bg);
             background-color: var(--os-primary); border: 2px solid var(--os-primary);
             text-transform: uppercase; transition: all 0.1s; text-shadow: none;
@@ -258,6 +265,55 @@
         .hero-subtitle { font-size: 1.2em; max-width: 600px; margin: 0 auto 40px auto; color: var(--os-primary); }
         .hero-actions { display: flex; justify-content: center; gap: 20px; }
 
+        .newest-artifacts-grid {
+            display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; margin-top: 60px;
+        }
+        @media (max-width: 900px) { .newest-artifacts-grid { grid-template-columns: 1fr; } }
+        
+        .hero-left-panel { display: flex; flex-direction: column; justify-content: center; text-align: left; }
+
+        .directory-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .directory-item {
+            padding: 12px 20px; border: 1px solid rgba(137, 208, 204, 0.3); background: transparent;
+            color: var(--os-primary); cursor: var(--cursor-pointer); display: flex; justify-content: space-between;
+            font-family: 'forma-djr-mono', monospace; text-transform: uppercase; font-weight: 700; transition: all 0.2s;
+            gap: 20px;
+        }
+        .directory-item span:first-child { flex-grow: 1; text-align: left; }
+        .directory-item:hover, .directory-item.active-dir, .directory-item.hovered {
+            background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink); transform: translateX(10px); box-shadow: var(--os-glow);
+        }
+
+        .preview-monitor {
+            background: var(--os-panel); border: 2px solid var(--os-primary); position: relative;
+            display: flex; flex-direction: column; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            cursor: var(--cursor-pointer); transition: all 0.2s;
+            height: auto; width: 100%;
+        }
+        .preview-monitor:hover, .preview-monitor.hovered {
+            border-color: var(--os-ink); transform: translateY(-5px);
+        }
+        .preview-monitor-header {
+            padding: 10px 20px; background: var(--os-primary); color: var(--os-bg); font-weight: 700;
+            font-family: 'forma-djr-mono', monospace; text-transform: uppercase; font-size: 0.9em;
+            display: flex; justify-content: space-between; transition: all 0.2s;
+            text-shadow: none;
+        }
+        .preview-monitor:hover .preview-monitor-header, .preview-monitor.hovered .preview-monitor-header {
+            background: var(--os-ink); color: var(--os-bg);
+        }
+        .preview-monitor-display {
+            display: flex; justify-content: center; align-items: center; padding: 10px 20px;
+            position: relative; height: 320px; background: var(--os-bg); overflow: hidden;
+        }
+        .preview-monitor-display img { max-width: 90%; max-height: 90%; object-fit: contain; z-index: 2; }
+        
+        .preview-scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(137, 208, 204, 0.05) 3px, rgba(137, 208, 204, 0.05) 4px);
+            z-index: 3; pointer-events: none;
+        }
+
         .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
 
         .product-card {
@@ -267,7 +323,7 @@
             border-top: 2px solid var(--current-border);
             border-bottom: 2px solid var(--current-border);
             padding: 25px;
-            position: relative; cursor: pointer;
+            position: relative; cursor: var(--cursor-pointer);
             transition: all 0.2s; transform-style: preserve-3d;
         }
         
@@ -366,7 +422,7 @@
 
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
         
-        .close-btn { background: transparent; border: none; color: var(--os-primary); font-size: 2em; cursor: pointer; padding: 0; line-height: 1; box-shadow: none; margin-top: -2px; }
+        .close-btn { background: transparent; border: none; color: var(--os-primary); font-size: 2em; cursor: var(--cursor-pointer); padding: 0; line-height: 1; box-shadow: none; margin-top: -2px; }
         .close-btn:hover, .close-btn.hovered { background: transparent; color: var(--os-danger); transform: scale(1.1); text-shadow: var(--os-glow-danger); box-shadow: none; }
         
         .modal-layout { display: flex; flex-direction: column; gap: 40px; min-height: 0; }
@@ -387,7 +443,7 @@
         .modal-image img {
             width: 100%; height: 100%; max-height: 550px; object-fit: contain;
         }
-        .modal-image.zoomable { cursor: pointer; }
+        .modal-image.zoomable { cursor: var(--cursor-pointer); }
         .modal-image.zoomable:hover, .modal-image.zoomable.hovered { border-color: var(--os-ink); }
 
         .zoom-signifier {
@@ -401,7 +457,7 @@
         }
 
         .gallery-nav { display: none; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: auto; padding-bottom: 10px; }
-        .gallery-thumb { width: 65px; height: 65px; border: 1px dashed var(--os-primary); cursor: pointer; padding: 5px; opacity: 0.5; transition: all 0.2s; background: var(--os-bg); }
+        .gallery-thumb { width: 65px; height: 65px; border: 1px dashed var(--os-primary); cursor: var(--cursor-pointer); padding: 5px; opacity: 0.5; transition: all 0.2s; background: var(--os-bg); }
         .gallery-thumb img { width: 100%; height: 100%; object-fit: contain; }
         .gallery-thumb:hover, .gallery-thumb.hovered, .gallery-thumb.active-thumb { opacity: 1; border: 1px solid var(--os-ink); box-shadow: var(--os-glow); }
 
@@ -409,7 +465,7 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 10, 17, 0.95);
             z-index: 10003; display: none; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.2s ease; cursor: zoom-out;
+            opacity: 0; transition: opacity 0.2s ease; cursor: var(--cursor-zoom-out);
         }
         #lightbox-overlay.active { display: flex; opacity: 1; }
         
@@ -419,18 +475,19 @@
             box-shadow: var(--os-glow);
             object-fit: contain;
             transition: opacity 0.2s;
+            cursor: var(--cursor-default);
         }
         
         .lightbox-close {
             position: absolute; top: 30px; right: 40px;
-            color: var(--os-primary); font-size: 2.5em; font-weight: 700; cursor: pointer; line-height: 1;
+            color: var(--os-primary); font-size: 2.5em; font-weight: 700; cursor: var(--cursor-pointer); line-height: 1;
         }
         .lightbox-close:hover, .lightbox-close.hovered { color: var(--os-danger); text-shadow: var(--os-glow-danger); transform: scale(1.1); }
 
         .lightbox-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
             color: var(--os-primary); font-size: 3em; font-weight: 700;
-            cursor: pointer; user-select: none; transition: all 0.2s;
+            cursor: var(--cursor-pointer); user-select: none; transition: all 0.2s;
             z-index: 10004; background: transparent; padding: 20px;
         }
         .lightbox-nav:hover, .lightbox-nav.hovered {
@@ -441,7 +498,23 @@
 
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid var(--os-primary); margin-bottom: 15px; background: var(--os-panel); }
         .cart-item h3 { margin: 0 0 5px 0; font-size: 1.2em; color: var(--os-ink); }
-        .cart-summary { margin-top: 30px; padding: 30px; background: rgba(137, 208, 204, 0.05); border: 1px dashed var(--os-primary); text-align: right; }
+        
+        .cart-summary { 
+            margin-top: 30px; padding: 30px; background: rgba(137, 208, 204, 0.05); 
+            border: 1px dashed var(--os-primary); display: flex; 
+            justify-content: space-between; align-items: center; text-align: right; 
+        }
+
+        #trash-zone {
+            border: 2px dashed var(--os-danger); color: var(--os-danger); 
+            text-shadow: var(--os-glow-danger);
+            padding: 15px 25px; text-align: center; transition: all 0.2s; 
+            font-weight: 700; cursor: var(--cursor-default);
+        }
+        #trash-zone.active-trash {
+            background: rgba(217, 75, 46, 0.2); box-shadow: var(--os-glow-danger); 
+            transform: scale(1.05); text-shadow: var(--os-glow-danger); border-style: solid;
+        }
 
         .terminal-input {
             background: rgba(137, 208, 204, 0.05);
@@ -454,36 +527,6 @@
         .terminal-input::placeholder { color: rgba(137, 208, 204, 0.4); }
 
         footer { text-align: center; padding: 30px 20px; font-size: 0.85em; font-weight: 600; color: var(--os-primary); border-top: 1px dashed var(--os-primary); margin-top: auto; }
-
-        /* --- MOBILE & TABLET RESPONSIVENESS --- */
-        @media (max-width: 768px) {
-            body { padding: 10px; background-size: 20px 20px; }
-            .os-taskbar { flex-direction: column; gap: 10px; padding: 15px; align-items: stretch; text-align: center; }
-            .os-brand { justify-content: center; }
-            .os-stats { justify-content: center; }
-            .window-titlebar { flex-direction: column; text-align: center; gap: 10px; font-size: 0.85em; }
-            .internal-nav { flex-direction: column; align-items: stretch; padding: 15px; }
-            .nav-links { flex-wrap: wrap; justify-content: center; }
-            #nav-cart { justify-content: center; margin-top: 10px; }
-            .hardware-panel { flex-direction: column; gap: 15px; align-items: stretch; text-align: center; }
-            .hardware-controls { flex-direction: column; width: 100%; }
-            .hardware-controls input[type=range] { width: 100%; }
-            .page { padding: 20px 15px; }
-            .hero-section { padding: 40px 15px; }
-            .hero-title { font-size: 2.2em; }
-            .hero-subtitle { font-size: 1em; }
-            .section-header { font-size: 1.2em; text-align: center; }
-            .filter-bar { justify-content: center; }
-            .modal-inner { padding: 20px; }
-            .modal-header { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
-            .modal-header h2 { margin-right: 0 !important; }
-            .modal-image { max-height: 40vh; }
-            .lightbox-close { top: 15px; right: 15px; font-size: 2em; }
-            .lightbox-nav { font-size: 2em; padding: 10px; }
-            .cart-item { flex-direction: column; align-items: stretch; text-align: center; gap: 15px; }
-            .cart-item > div { justify-content: center; flex-direction: column; }
-            .cart-item img { margin: 0 auto 15px auto !important; }
-        }
     </style>
 </head>
 <body>
@@ -497,7 +540,7 @@
     </div>
 
     <div class="os-taskbar terminal-panel flicker-fast">
-        <div class="os-brand" onclick="switchPage('home', document.querySelectorAll('.nav-links a')[0])" style="cursor: pointer;" title="Return to Overview">
+        <div class="os-brand" onclick="switchPage('home', document.querySelectorAll('.nav-links a')[0])">
             <img src="logo4.png" alt="Fandom House" class="fh-logo-img">
         </div>
         <div class="os-stats">
@@ -543,43 +586,73 @@
                     <div class="hero-badge">MULTIVERSE ARCHIVE</div>
                     <h1 class="hero-title flicker">[ARTIFACTS ACROSS REALITIES]</h1>
                     <p class="hero-subtitle">Curating high-fidelity artifacts, books, and media recovered from alternate timelines and universes.</p>
-                    <div class="hero-actions">
-                        <button onclick="switchPage('catalog', document.querySelectorAll('.nav-links a')[1])" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">BROWSE PRODUCTS</button>
+                    
+                    <div class="newest-artifacts-grid">
+                        <div class="hero-left-panel">
+                            <h3 style="margin-bottom: 15px; font-size: 1.1em; color: var(--os-ink);">> NEWEST_ARTIFACTS:</h3>
+                            <div class="directory-list">
+                                <div class="directory-item active-dir" data-preview="defiantjazz.png" data-id="p5" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
+                                    <span>01. DEFIANT JAZZ CASSETTE</span>
+                                    <span>[20 USD]</span>
+                                </div>
+                                <div class="directory-item" data-preview="optics1.jpg" data-id="p1" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
+                                    <span>02. OPTICS & DESIGN ART BOOK</span>
+                                    <span>[85 USD]</span>
+                                </div>
+                                <div class="directory-item" data-preview="thepact1.jpg" data-id="p8" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
+                                    <span>03. THE PACT - YOUNG READERS EDITION</span>
+                                    <span>[40 USD]</span>
+                                </div>
+                                <div class="directory-item" data-preview="timecover1.jpg" data-id="p2" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
+                                    <span>04. TIME MAGAZINE - ELDON TYRELL ISSUE</span>
+                                    <span>[25 USD]</span>
+                                </div>
+                            </div>
+                            <button class="hero-nav-btn" onclick="switchPage('catalog', document.querySelectorAll('.nav-links a')[1])" style="width: max-content;">BROWSE ALL ARCHIVES</button>
+                        </div>
+
+                        <div class="preview-monitor" onclick="openCurrentPreview()">
+                            <div class="preview-monitor-header">
+                                <span>PREVIEW_MONITOR_V1</span>
+                            </div>
+                            <div class="preview-monitor-display">
+                                <div class="preview-scanline"></div>
+                                <img id="hero-preview-img" src="defiantjazz.png" alt="Preview Image">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <h2 class="section-header reveal">FEATURED ARTIFACTS</h2>
                 <div class="card-grid">
                     
-                    <div class="product-card reveal" data-category="audio" data-id="p5" data-title="Defiant Jazz Cassette" data-price="20" data-tag="AUDIO & MUSIC" data-desc="The official Music Dance Experience cassette featuring 'Defiant Jazz'. Authorized for Macrodata Refinement." onclick="openModal(this)">
-                        
+                    <div class="product-card reveal" data-category="literature" data-id="p3" data-title="The Grasshopper Lies Heavy" data-price="45" data-tag="LITERATURE & TEXTS" data-desc="A premium 12-inch ambient record. Includes a fully detailed inner sleeve and a heavy cardboard slipcase." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
-                            <img src="defiantjazz.png" alt="Cover Art">
+                            <img src="grasshopper1.jpg" alt="The Grasshopper Lies Heavy Cover">
+                            <img src="grasshopper2.jpg" alt="The Grasshopper Lies Heavy Cover 2">
                         </div>
-
-                        <span class="universe-tag">AUDIO & MUSIC</span>
-                        <div class="image-viewer" style="border-style: solid;">
-                            <img src="defiantjazz.png" alt="Defiant Jazz Cassette">
+                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                         <div class="image-viewer" style="border-style: solid;">
+                            <img src="grasshopper1.jpg" alt="The Grasshopper Lies Heavy Cover">
                         </div>
                         <div>
-                            <h3>Defiant Jazz Cassette</h3>
-                            <span class="price">20 USD</span>
+                            <h3>The Grasshopper Lies Heavy</h3>
+                            <span class="price">45 USD</span>
                         </div>
                     </div>
 
-
-                    <div class="product-card reveal" style="transition-delay: 0.2s;" data-category="literature" data-id="p1" data-title="Optics & Design Art Book" data-price="85" data-tag="LITERATURE & TEXTS" data-desc="The work is mysterious and important. An archival collection of oil paintings created by the Optics and Design department. Please try to enjoy each painting equally." onclick="openModal(this)">
+                    <div class="product-card reveal" style="transition-delay: 0.1s;" data-category="audio" data-id="p9" data-title="GLaDOS' Greatest Hits CD" data-price="15" data-tag="AUDIO & MUSIC" data-desc="A collection of department-approved Aperture Science vocal performances. Includes 'Still Alive' and 'Want You Gone'. Unauthorized testing while listening is encouraged." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
-                            <img src="optics1.jpg" alt="Cover Art">
-                            <img src="optics2.jpg" alt="Inside Pages">
+                            <img src="glados1.jpg" alt="Cover Art">
+                            <img src="glados2.jpg" alt="Back Cover">
                         </div>
-                        <span class="universe-tag">LITERATURE & TEXTS</span>
+                        <span class="universe-tag">AUDIO & MUSIC</span>
                         <div class="image-viewer" style="border-style: solid;">
-                            <img src="optics1.jpg" alt="Optics & Design Art Book">
+                            <img src="glados1.jpg" alt="GLaDOS' Greatest Hits CD">
                         </div>
                         <div>
-                            <h3>Optics & Design Art Book</h3>
-                            <span class="price">85 USD</span>
+                            <h3>GLaDOS' Greatest Hits CD</h3>
+                            <span class="price">15 USD</span>
                         </div>
                     </div>
 
@@ -732,7 +805,7 @@
             <div id="guide" class="page">
                 <h2 class="section-header reveal">OPTICAL PROTOCOL MANUAL</h2>
                 <div class="reveal terminal-panel" style="padding: 40px;">
-                    <p style="font-size: 1.2em; margin-top:0; color: var(--os-danger);">WARNING: UNAUTHORIZED DATA EXTRACTION IS STRICTLY PROHIBITED.</p>
+                    <p style="font-size: 1.2em; margin-top:0; color: var(--os-danger); text-shadow: var(--os-glow-danger);">WARNING: UNAUTHORIZED DATA EXTRACTION IS STRICTLY PROHIBITED.</p>
                     <ul style="line-height: 2.2; font-weight: 600; font-family: 'forma-djr-mono', monospace; color: var(--os-primary);">
                         <li><strong>[ DYNAMIC SCROLL ]</strong> - Pinch <span style="color:var(--os-ink)">Index + Thumb</span> in empty space and drag vertically. The view follows your velocity.</li>
                         <li><strong>[ INSPECT DATA ]</strong> - Tap <span style="color:var(--os-ink)">Middle Finger Knuckle + Thumb Tip</span> on a card to view decrypted details.</li>
@@ -750,8 +823,14 @@
                 <div id="cart-content-area" style="display: none;">
                     <div id="cart-items-list"></div>
                     <div class="cart-summary reveal terminal-panel">
-                        <h2 style="margin:0 0 15px 0;">TOTAL: <span id="cart-total-display" style="color: var(--os-ink);">0</span> USD.</h2>
-                        <button onclick="goToCheckout()" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">PROCESS CHECKOUT</button>
+                        <div id="trash-zone">
+                            <span style="font-size: 1.2em; display: block; margin-bottom: 5px;">[ PURGE_DATA ]</span>
+                            <span style="font-size: 0.8em; opacity: 0.8;">Drag Item Here to Remove</span>
+                        </div>
+                        <div>
+                            <h2 style="margin:0 0 15px 0;">TOTAL: <span id="cart-total-display" style="color: var(--os-ink);">0</span> USD.</h2>
+                            <button onclick="goToCheckout()" style="background: var(--os-ink); color: var(--os-bg); border-color: var(--os-ink);">PROCESS CHECKOUT</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -835,10 +914,21 @@
     </div>
 
     <div id="hand-cursor"></div>
-    <!-- Added autoplay and muted to prevent video failures on iOS/Safari -->
-    <video class="input_video" autoplay muted playsinline></video>
+    <video class="input_video" playsinline></video>
 
     <script>
+        // --- GLOBALLY CACHED DOM ELEMENTS FOR PERFORMANCE ---
+        const pageElements = document.querySelectorAll('.page');
+        const navLinkElements = document.querySelectorAll('.nav-links a');
+        const bootScreen = document.getElementById('boot-screen');
+        const osClock = document.getElementById('os-clock');
+        const modalEl = document.getElementById('product-modal');
+        const lightboxEl = document.getElementById('lightbox-overlay');
+        const trashZoneEl = document.getElementById('trash-zone');
+        const cartPageEl = document.getElementById('cart');
+        const navCartBtn = document.getElementById('nav-cart');
+        const cursor = document.getElementById('hand-cursor');
+        
         function filterCatalog(category, btnElement) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
             btnElement.classList.add('active-filter');
@@ -873,8 +963,6 @@
 
         async function runBootSequence() {
             const container = document.getElementById('boot-text-container');
-            const bootScreen = document.getElementById('boot-screen');
-            
             await new Promise(r => setTimeout(r, 500));
 
             for (let i = 0; i < bootSequenceLines.length; i++) {
@@ -896,33 +984,44 @@
             }, 500);
         }
 
-        // Switched from window.load to DOMContentLoaded so the text animation starts immediately
-        document.addEventListener('DOMContentLoaded', runBootSequence);
+        window.addEventListener('load', runBootSequence);
 
+        // Optimized Clock Setup
         setInterval(() => {
-            document.getElementById('os-clock').innerText = new Date().toLocaleTimeString([], { hour12: false }) + " LCT";
+            osClock.innerText = new Date().toLocaleTimeString([], { hour12: false }) + " LCT";
         }, 1000);
 
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
+                    // OPTIMIZATION: Stop observing elements once they are revealed
+                    revealObserver.unobserve(entry.target); 
                 }
             });
         }, { threshold: 0.1 });
 
         function triggerReveals() {
-            if(document.getElementById('boot-screen').style.display === 'none') {
-                document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+            if(bootScreen.style.display === 'none') {
+                document.querySelectorAll('.reveal:not(.active)').forEach(el => revealObserver.observe(el));
             }
         }
 
         function switchPage(pageId, btnElement) {
-            document.querySelectorAll('.page').forEach(page => {
+            const targetPage = document.getElementById(pageId);
+            
+            // If we are already on this page, just scroll to top and do nothing else
+            if (targetPage && targetPage.classList.contains('active')) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            pageElements.forEach(page => {
                 page.classList.remove('active');
-                page.querySelectorAll('.reveal').forEach(el => el.classList.remove('active'));
+                // Removing active from reveals inside just hides them again if we want replayability
+                page.querySelectorAll('.reveal').forEach(el => el.classList.remove('active')); 
             });
-            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            navLinkElements.forEach(link => link.classList.remove('active'));
             
             document.getElementById(pageId).classList.add('active');
             if (btnElement) btnElement.classList.add('active');
@@ -930,7 +1029,6 @@
             window.scrollTo(0, 0);
             setTimeout(triggerReveals, 50); 
         }
-        triggerReveals();
 
         let currentModalItem = null;
         let currentGallery = [];
@@ -983,9 +1081,8 @@
                 navContainer.style.display = 'none';
             }
             
-            const modal = document.getElementById('product-modal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('active'), 10);
+            modalEl.style.display = 'flex';
+            setTimeout(() => modalEl.classList.add('active'), 10);
         }
 
         function setModalImage(index) {
@@ -1010,14 +1107,12 @@
         }
 
         function closeModal() {
-            const modal = document.getElementById('product-modal');
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = 'none', 200); 
+            modalEl.classList.remove('active');
+            setTimeout(() => modalEl.style.display = 'none', 200); 
         }
 
         function openLightbox() {
             if (currentGallery.length === 0) return;
-            const lightbox = document.getElementById('lightbox-overlay');
             const lightboxImg = document.getElementById('lightbox-image');
             lightboxImg.src = currentGallery[currentGalleryIndex];
             
@@ -1028,8 +1123,8 @@
                 navs.forEach(nav => nav.style.display = 'none');
             }
 
-            lightbox.style.display = 'flex';
-            setTimeout(() => lightbox.classList.add('active'), 10);
+            lightboxEl.style.display = 'flex';
+            setTimeout(() => lightboxEl.classList.add('active'), 10);
         }
 
         function changeLightboxImage(direction) {
@@ -1041,19 +1136,16 @@
             if (currentGalleryIndex >= currentGallery.length) currentGalleryIndex = 0;
             
             document.getElementById('lightbox-image').src = currentGallery[currentGalleryIndex];
-            
             setModalImage(currentGalleryIndex); 
         }
 
         function closeLightbox() {
-            const lightbox = document.getElementById('lightbox-overlay');
-            lightbox.classList.remove('active');
-            setTimeout(() => lightbox.style.display = 'none', 200);
+            lightboxEl.classList.remove('active');
+            setTimeout(() => lightboxEl.style.display = 'none', 200);
         }
 
         window.addEventListener('keydown', (e) => {
-            const lightbox = document.getElementById('lightbox-overlay');
-            if (lightbox.classList.contains('active')) {
+            if (lightboxEl.classList.contains('active')) {
                 if (e.key === 'ArrowLeft') changeLightboxImage(-1);
                 if (e.key === 'ArrowRight') changeLightboxImage(1);
                 if (e.key === 'Escape') closeLightbox();
@@ -1106,6 +1198,7 @@
                     totalItems += item.qty; totalCR += (item.price * item.qty);
                     const div = document.createElement('div');
                     div.className = 'cart-item reveal active';
+                    div.dataset.id = id;
                     
                     const imgHTML = item.img 
                         ? `<img src="${item.img}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid var(--os-primary); background: var(--os-bg); padding: 5px; margin-right: 20px;">` 
@@ -1148,11 +1241,9 @@
         }
 
         const videoElement = document.getElementsByClassName('input_video')[0];
-        const cursor = document.getElementById('hand-cursor');
         const statusText = document.getElementById('status');
         const toggleBtn = document.getElementById('toggleCam');
         const sensitivitySlider = document.getElementById('sensSlider');
-        const navCartBtn = document.getElementById('nav-cart');
 
         let isCameraActive = false;
         let camera = null, hands = null;
@@ -1170,14 +1261,46 @@
         let isDragging = false, isScrolling = false, isClicking = false;
         let dragStartY = 0, scrollStartY = 0;
         let ghostEl = null, draggedItem = null;
+        let currentlyHovered = null;
+        let currentPreviewId = "p5"; // Store currently previewed ID
+
+        function updatePreview(element) {
+            document.querySelectorAll('.directory-item').forEach(item => item.classList.remove('active-dir'));
+            element.classList.add('active-dir');
+            
+            currentPreviewId = element.getAttribute('data-id');
+            const imgSrc = element.getAttribute('data-preview');
+            const imgEl = document.getElementById('hero-preview-img');
+            
+            // Remove blink logic: direct source update
+            imgEl.src = imgSrc;
+        }
+
+        function openModalFromDir(element) {
+            const id = element.getAttribute('data-id');
+            const card = document.querySelector(`.product-card[data-id="${id}"]`);
+            if (card) openModal(card);
+        }
+
+        function openCurrentPreview() {
+            const card = document.querySelector(`.product-card[data-id="${currentPreviewId}"]`);
+            if (card) openModal(card);
+        }
 
         const getDist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 
         let mouseDownY = 0;
+        
+        // Optimized mouse move logic
+        let isCursorVisible = false;
         window.addEventListener('mousemove', (e) => {
             if (!isCameraActive) {
                 targetX = e.clientX; targetY = e.clientY;
-                cursor.style.display = "block"; 
+                // Keep the square reticle hidden when using standard mouse
+                if (isCursorVisible) {
+                    cursor.style.display = "none"; 
+                    isCursorVisible = false;
+                }
             }
         });
         
@@ -1188,14 +1311,19 @@
 
                 mouseDownY = e.clientY;
                 const el = document.elementFromPoint(currentX, currentY);
-                const isModalOpen = document.getElementById('product-modal').classList.contains('active');
-                const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
+                const isModalOpen = modalEl.classList.contains('active');
+                const isLightboxOpen = lightboxEl.classList.contains('active');
                 const card = el ? el.closest('.product-card') : null;
+                const cartRow = el ? el.closest('.cart-item') : null;
 
                 if(card && !isModalOpen && !isLightboxOpen) {
                     e.preventDefault(); 
                     isDragging = true;
                     initiateDrag(card);
+                } else if(cartRow && !isModalOpen && !isLightboxOpen) {
+                    e.preventDefault(); 
+                    isDragging = true;
+                    initiateCartDrag(cartRow);
                 } else if (!el || !el.closest('button, a, .close-btn, input, .terminal-panel, .modal-overlay, #lightbox-overlay')) {
                     e.preventDefault(); 
                     isScrolling = true;
@@ -1248,8 +1376,11 @@
                     lastStableX = newTargetX;
                     lastStableY = newTargetY;
                 }
-
-                cursor.style.display = "block";
+                
+                if (!isCursorVisible) {
+                    cursor.style.display = "block";
+                    isCursorVisible = true;
+                }
 
                 const distIT = getDist(indexTip, thumbTip), distMT = getDist(middleTip, thumbTip);
                 const distRT = getDist(ringTip, thumbTip), distMPIP = getDist(middlePip, thumbTip); 
@@ -1269,13 +1400,18 @@
                 if (!isDragging && !isScrolling && !isClicking) {
                     if (isGrabbing) {
                         const el = document.elementFromPoint(currentX, currentY);
-                        const isModalOpen = document.getElementById('product-modal').classList.contains('active');
-                        const isLightboxOpen = document.getElementById('lightbox-overlay').classList.contains('active');
+                        const isModalOpen = modalEl.classList.contains('active');
+                        const isLightboxOpen = lightboxEl.classList.contains('active');
+                        
                         if (!isModalOpen && !isLightboxOpen) {
                             const card = el ? el.closest('.product-card') : null;
+                            const cartRow = el ? el.closest('.cart-item') : null;
                             if (card) {
                                 isDragging = true;
                                 initiateDrag(card);
+                            } else if (cartRow) {
+                                isDragging = true;
+                                initiateCartDrag(cartRow);
                             }
                         }
                     }
@@ -1286,7 +1422,7 @@
                 if (!isDragging && !isClicking) {
                     if (distIT < PINCH_THRESHOLD && !isGrabbing) {
                         const el = document.elementFromPoint(currentX, currentY);
-                        if (!el || !el.closest('a, button, input, #nav-cart, .modal-overlay, #lightbox-overlay')) {
+                        if (!el || !el.closest('a, button, input, #nav-cart, .modal-overlay, #lightbox-overlay, .directory-item, .hero-nav-btn')) {
                             if (!isScrolling) { 
                                 isScrolling = true; cursor.classList.add('pinched');
                                 dragStartY = currentY; scrollStartY = window.scrollY; 
@@ -1298,9 +1434,32 @@
                 }
 
             } else { 
-                if (isCameraActive) cursor.style.display = "none"; 
+                if (isCameraActive && isCursorVisible) {
+                    cursor.style.display = "none"; 
+                    isCursorVisible = false;
+                }
                 isScrolling = false; isClicking = false;
             }
+        }
+
+        function initiateCartDrag(cartRow) {
+            const id = cartRow.dataset.id;
+            const item = shoppingCart[id];
+            draggedItem = { 
+                id: id, 
+                title: item.title, 
+                price: item.price,
+                img: item.img,
+                isCartItem: true,
+                sourceRow: cartRow 
+            };
+            cursor.classList.add('dragging');
+            ghostEl = document.createElement('div');
+            ghostEl.className = 'ghost-card';
+            const ghostImgHTML = draggedItem.img ? `<img src="${draggedItem.img}" style="width:100%; height:80px; object-fit:contain; margin-bottom:10px; border:1px solid var(--os-ink);">` : '';
+            ghostEl.innerHTML = `${ghostImgHTML}<h3>${draggedItem.title}</h3><p style="margin:5px 0 0 0; color:var(--os-primary);">${draggedItem.price} USD</p>`;
+            document.body.appendChild(ghostEl);
+            cartRow.style.opacity = '0.5'; 
         }
 
         function initiateDrag(cardEl) {
@@ -1323,20 +1482,41 @@
         }
 
         function cancelDrag() {
-            if (draggedItem && draggedItem.sourceCard) { draggedItem.sourceCard.style.opacity = '1'; }
+            if (draggedItem) {
+                if (draggedItem.sourceCard) draggedItem.sourceCard.style.opacity = '1';
+                if (draggedItem.sourceRow) draggedItem.sourceRow.style.opacity = '1';
+            }
             isDragging = false; cursor.classList.remove('dragging');
             if(ghostEl) ghostEl.remove(); ghostEl = null;
             navCartBtn.classList.remove('active-zone');
+            
+            if (trashZoneEl) trashZoneEl.classList.remove('active-trash');
             draggedItem = null;
         }
 
         function handleDropZone() {
-            const rect = navCartBtn.getBoundingClientRect();
-            const pad = 80; 
-            if (currentX > (rect.left - pad) && currentX < (rect.right + pad) && currentY > (rect.top - pad) && currentY < (rect.bottom + pad)) {
-                addToCart(draggedItem);
-                navCartBtn.classList.add('flash');
-                setTimeout(()=>navCartBtn.classList.remove('flash'), 500);
+            if (draggedItem.isCartItem) {
+                if (trashZoneEl && cartPageEl.classList.contains('active')) {
+                    const rect = trashZoneEl.getBoundingClientRect();
+                    const pad = 40; 
+                    if (currentX > (rect.left - pad) && currentX < (rect.right + pad) && currentY > (rect.top - pad) && currentY < (rect.bottom + pad)) {
+                        removeFromCart(draggedItem.id);
+                        trashZoneEl.style.background = 'var(--os-danger)';
+                        trashZoneEl.style.color = 'var(--os-bg)';
+                        setTimeout(() => {
+                            trashZoneEl.style.background = '';
+                            trashZoneEl.style.color = '';
+                        }, 400);
+                    }
+                }
+            } else {
+                const rect = navCartBtn.getBoundingClientRect();
+                const pad = 80; 
+                if (currentX > (rect.left - pad) && currentX < (rect.right + pad) && currentY > (rect.top - pad) && currentY < (rect.bottom + pad)) {
+                    addToCart(draggedItem);
+                    navCartBtn.classList.add('flash');
+                    setTimeout(()=>navCartBtn.classList.remove('flash'), 500);
+                }
             }
             cancelDrag();
         }
@@ -1352,10 +1532,9 @@
                 } else if (el.classList.contains('modal-overlay')) {
                     closeModal();
                 } else {
-                    const clickable = el.closest('button, a, .close-btn, input, .product-card, #nav-cart, .filter-btn, .modal-image.zoomable, .gallery-thumb, .lightbox-nav');
+                    const clickable = el.closest('button, a, .close-btn, input, .product-card, #nav-cart, .filter-btn, .modal-image.zoomable, .gallery-thumb, .lightbox-nav, .directory-item, .preview-monitor, .hero-nav-btn');
                     if (clickable) {
                         clickable.click();
-                        // Prevent the jump/scale effect on lightbox arrows
                         if (!clickable.classList.contains('lightbox-nav')) {
                             clickable.style.transform = 'scale(0.95)';
                             setTimeout(() => clickable.style.transform = '', 150);
@@ -1391,20 +1570,44 @@
                 window.scrollTo(0, scrollStartY - (deltaY * 3.0)); 
             }
 
-            document.querySelectorAll('.hovered').forEach(h => h.classList.remove('hovered'));
-            const el = document.elementFromPoint(currentX, currentY);
-            if(el && !isDragging) {
-                const hoverable = el.closest('button, a, .close-btn, input, .product-card, .filter-btn, .modal-image.zoomable, .lightbox-close, .gallery-thumb, .lightbox-nav');
-                if(hoverable) hoverable.classList.add('hovered');
-                
-                if (el.closest('#nav-cart') && !isDragging) {
-                    navCartBtn.style.transform = 'scale(1.05)';
-                    navCartBtn.style.borderColor = 'var(--os-ink)';
-                    navCartBtn.style.color = 'var(--os-ink)';
-                } else if (!isDragging && !navCartBtn.classList.contains('flash')) {
-                    navCartBtn.style.transform = '';
-                    navCartBtn.style.borderColor = '';
-                    navCartBtn.style.color = '';
+            let newHovered = null;
+            if (!isScrolling && !isDragging) {
+                const el = document.elementFromPoint(currentX, currentY);
+                if(el) {
+                    newHovered = el.closest('button, a, .close-btn, input, .product-card, .filter-btn, .modal-image.zoomable, .lightbox-close, .gallery-thumb, .lightbox-nav, .directory-item, .preview-monitor, .hero-nav-btn');
+                }
+            }
+
+            if (currentlyHovered !== newHovered) {
+                if (currentlyHovered) currentlyHovered.classList.remove('hovered');
+                if (newHovered) {
+                    newHovered.classList.add('hovered');
+                    if (newHovered.classList.contains('directory-item')) {
+                        updatePreview(newHovered);
+                    }
+                }
+                currentlyHovered = newHovered;
+            }
+            
+            if (currentlyHovered && currentlyHovered.closest('#nav-cart') && !isDragging) {
+                navCartBtn.style.transform = 'scale(1.05)';
+                navCartBtn.style.borderColor = 'var(--os-ink)';
+                navCartBtn.style.color = 'var(--os-ink)';
+            } else if (!isDragging && !navCartBtn.classList.contains('flash')) {
+                navCartBtn.style.transform = '';
+                navCartBtn.style.borderColor = '';
+                navCartBtn.style.color = '';
+            }
+
+            if (isDragging && draggedItem && draggedItem.isCartItem) {
+                if (trashZoneEl && cartPageEl.classList.contains('active')) {
+                    const rect = trashZoneEl.getBoundingClientRect();
+                    const pad = 40;
+                    if (currentX > (rect.left - pad) && currentX < (rect.right + pad) && currentY > (rect.top - pad) && currentY < (rect.bottom + pad)) {
+                        trashZoneEl.classList.add('active-trash');
+                    } else {
+                        trashZoneEl.classList.remove('active-trash');
+                    }
                 }
             }
 
