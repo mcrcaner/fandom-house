@@ -31,6 +31,38 @@
 
         * { box-sizing: border-box; }
 
+/* Custom Scrollbar - Sharp Corners */
+*::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+*::-webkit-scrollbar-track {
+    background: var(--os-bg);
+    border-left: 1px dashed var(--os-primary);
+}
+*::-webkit-scrollbar-thumb {
+    background: var(--os-primary);
+    border: 2px solid var(--os-bg);
+    border-radius: 0px; 
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--os-ink);
+}
+*::-webkit-scrollbar-corner {
+    background: var(--os-bg);
+}
+
+/* Firefox compatibility */
+html {
+    scrollbar-width: auto;
+    scrollbar-color: var(--os-primary) var(--os-bg);
+}
+
+/* Hide the default OS scrollbar buttons (the rounded triangles) */
+*::-webkit-scrollbar-button {
+    display: none;
+}
+
         body {
             font-family: 'forma-djr-mono', monospace;
             margin: 0; padding: 20px;
@@ -597,7 +629,7 @@
                                 </div>
                                 <div class="directory-item" data-preview="optics1.jpg" data-id="p1" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
                                     <span>02. OPTICS & DESIGN ART BOOK</span>
-                                    <span>[85 USD]</span>
+                                    <span>[55 USD]</span>
                                 </div>
                                 <div class="directory-item" data-preview="thepact1.jpg" data-id="p8" onmouseover="updatePreview(this)" onclick="openModalFromDir(this)">
                                     <span>03. THE PACT - YOUNG READERS EDITION</span>
@@ -671,7 +703,7 @@
 
                 <div class="card-grid" id="catalog-grid">
                     
-                    <div class="product-card reveal" data-category="literature" data-id="p1" data-title="Optics & Design Art Book" data-price="85" data-tag="LITERATURE & TEXTS" data-desc="The work is mysterious and important. An archival collection of oil paintings created by the Optics and Design department. Please try to enjoy each painting equally." onclick="openModal(this)">
+                    <div class="product-card reveal" data-category="literature" data-id="p1" data-title="Optics & Design Art Book" data-price="55" data-tag="LITERATURE & TEXTS" data-desc="The work is mysterious and important. An archival collection of oil paintings created by the Optics and Design department. Please try to enjoy each painting equally." onclick="openModal(this)">
                         <div class="product-gallery-data" style="display: none;">
                             <img src="optics1.jpg" alt="Cover Art">
                             <img src="optics2.jpg" alt="Inside Pages">
@@ -682,7 +714,7 @@
                         </div>
                         <div>
                             <h3>Optics & Design Art Book</h3>
-                            <span class="price">85 USD</span>
+                            <span class="price">55 USD</span>
                         </div>
                     </div>
                     
@@ -817,7 +849,7 @@
                         <li><strong>[ SCROLL ]</strong> - Pinch your <span style="color:var(--os-ink)">Index + Thumb</span> and drag vertically. The view follows your movement.</li>
                         <li><strong>[ INSPECT_ARTIFACT ]</strong> - Tap <span style="color:var(--os-ink)">Thumb Tip + Middle Finger Knuckle</span> on a card to view Artifact details.</li>
                         <li><strong>[ ADD_TO_CART ]</strong> - Bring <span style="color:var(--os-ink)">All Fingertips Together</span> over an Artifact to physically GRAB it. Drag it to the Cart zone at the top right of the screen.</li>
-                        <li><strong>[ PURGE_ARTIFACT ]</strong> - On the Cart page, physically <span style="color:var(--os-ink)">GRAB</span> a queued artifact and move it to the<br><span style="color:var(--os-danger); text-shadow: var(--os-glow-danger);">[ PURGE_ARTIFACT ]</span> zone to de-list it from your cart.</li>
+                        <li><strong>[ PURGE_ARTIFACT ]</strong> - On the Cart page, physically <span style="color:var(--os-ink)">GRAB</span> a queued artifact and move it to the <span style="color:var(--os-danger); text-shadow: var(--os-glow-danger);">[ PURGE_ARTIFACT ]</span> zone to de-list it from your cart.</li>
                     </ul>
                 </div>
             </div>
@@ -1313,6 +1345,8 @@
         });
         
         window.addEventListener('mousedown', (e) => { 
+            // Allow default browser behavior if clicking on the native scrollbars
+            if (e.clientX >= document.documentElement.clientWidth || e.clientY >= document.documentElement.clientHeight) return;
             if(!isCameraActive) { 
                 targetX = e.clientX; targetY = e.clientY;
                 currentX = e.clientX; currentY = e.clientY;
